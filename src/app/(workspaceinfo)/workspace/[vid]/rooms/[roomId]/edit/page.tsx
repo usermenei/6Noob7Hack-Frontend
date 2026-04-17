@@ -9,7 +9,6 @@ export default function EditRoomPage({
 }: {
   params: Promise<{ vid: string; roomId: string }>;
 }) {
-  // ✅ FIX NEXT.JS 15 PARAMS
   const { vid, roomId } = use(params);
 
   const router = useRouter();
@@ -19,6 +18,7 @@ export default function EditRoomPage({
     name: "",
     capacity: 1,
     price: 0,
+    picture: "", // ✅ ADDED
   });
 
   useEffect(() => {
@@ -34,6 +34,7 @@ export default function EditRoomPage({
           name: json.data.name,
           capacity: json.data.capacity,
           price: json.data.price,
+          picture: json.data.picture || "", // ✅ ADDED
         });
       }
     };
@@ -74,11 +75,7 @@ export default function EditRoomPage({
       <h1>Edit Room</h1>
 
       <form onSubmit={handleUpdate}>
-        <input
-          name="name"
-          value={form.name}
-          onChange={handleChange}
-        />
+        <input name="name" value={form.name} onChange={handleChange} />
         <br />
 
         <input
@@ -93,6 +90,15 @@ export default function EditRoomPage({
           name="price"
           type="number"
           value={form.price}
+          onChange={handleChange}
+        />
+        <br />
+
+        {/* ✅ NEW: picture */}
+        <input
+          name="picture"
+          placeholder="Image URL"
+          value={form.picture}
           onChange={handleChange}
         />
         <br />

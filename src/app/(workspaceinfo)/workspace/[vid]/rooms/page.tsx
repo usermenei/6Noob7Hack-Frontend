@@ -9,6 +9,22 @@ const BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   "http://localhost:5000/api/v1";
 
+// 🔥 FIX: convert Google Drive links safely
+const fixImageUrl = (url: string) => {
+  if (!url) return "";
+
+  // already good format
+  if (url.includes("drive.google.com/uc")) return url;
+
+  // convert /file/d/ID/view
+  const match = url.match(/\/d\/(.*?)\//);
+  if (match) {
+    return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+  }
+
+  return url;
+};
+
 async function getRooms(vid: string) {
   const res = await fetch(
     `${BASE}/coworkingspaces/${vid}/rooms`,
@@ -31,15 +47,13 @@ export default function RoomsPage({
 }: {
   params: Promise<{ vid: string }>;
 }) {
-  // ✅ FIX NEXT.JS 15 PARAMS
   const { vid } = use(params);
-
   const rooms = use(getRooms(vid));
 
   return (
     <main style={{ background: "#f4f5f7", minHeight: "100vh" }}>
       
-      {/* 🔷 HEADER */}
+      {/* HEADER */}
       <div
         style={{
           background: "linear-gradient(135deg, #0c4a6e 0%, #0891b2 100%)",
@@ -72,11 +86,10 @@ export default function RoomsPage({
           Choose your perfect workspace
         </p>
 
-        {/* ✅ ADMIN CREATE BUTTON */}
         <AdminCreateButton vid={vid} />
       </div>
 
-      {/* 🔷 CONTENT */}
+      {/* CONTENT */}
       <div
         style={{
           maxWidth: "900px",
@@ -90,12 +103,7 @@ export default function RoomsPage({
           </div>
         )}
 
-        <div
-          style={{
-            display: "grid",
-            gap: "20px",
-          }}
-        >
+        <div style={{ display: "grid", gap: "20px" }}>
           {rooms.map((room: any) => (
             <div
               key={room._id}
@@ -107,6 +115,29 @@ export default function RoomsPage({
                 border: "1px solid #e5e7eb",
               }}
             >
+              {/* ✅ ROOM IMAGE (FIXED) */}
+              {room.picture && (
+                <div
+                  style={{
+                    width: "100%",
+                    height: "160px",
+                    borderRadius: "12px",
+                    overflow: "hidden",
+                    marginBottom: "12px",
+                  }}
+                >
+                  <img
+                    src={fixImageUrl(room.picture)}
+                    alt={room.name}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
+                  />
+                </div>
+              )}
+
               {/* Room Title */}
               <h2
                 style={{
@@ -162,7 +193,7 @@ export default function RoomsPage({
                 View Availability →
               </Link>
 
-              {/* ✅ ADMIN ACTIONS */}
+              {/* ADMIN ACTIONS */}
               <AdminRoomActions roomId={room._id} vid={vid} />
             </div>
           ))}

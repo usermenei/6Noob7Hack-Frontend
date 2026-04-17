@@ -9,7 +9,7 @@ export default function CreateRoomPage({
 }: {
   params: Promise<{ vid: string }>;
 }) {
-  const { vid } = use(params); // ✅ FIX HERE
+  const { vid } = use(params);
 
   const router = useRouter();
   const { data: session } = useSession();
@@ -18,6 +18,7 @@ export default function CreateRoomPage({
     name: "",
     capacity: 1,
     price: 0,
+    picture: "", // ✅ ADDED
   });
 
   const handleChange = (e: any) => {
@@ -37,7 +38,7 @@ export default function CreateRoomPage({
         },
         body: JSON.stringify({
           ...form,
-          coworkingSpace: vid, // ✅ FIX HERE
+          coworkingSpace: vid,
         }),
       }
     );
@@ -56,11 +57,7 @@ export default function CreateRoomPage({
       <h1>Create Room</h1>
 
       <form onSubmit={handleSubmit}>
-        <input
-          name="name"
-          placeholder="Room name"
-          onChange={handleChange}
-        />
+        <input name="name" placeholder="Room name" onChange={handleChange} />
         <br />
 
         <input
@@ -75,6 +72,14 @@ export default function CreateRoomPage({
           name="price"
           type="number"
           placeholder="Price"
+          onChange={handleChange}
+        />
+        <br />
+
+        {/* ✅ NEW: picture */}
+        <input
+          name="picture"
+          placeholder="Image URL"
           onChange={handleChange}
         />
         <br />
