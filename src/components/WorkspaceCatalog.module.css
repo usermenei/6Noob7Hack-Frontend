@@ -1,0 +1,121 @@
+.title {
+  font-size: 13px; /* ขยายจาก 11px */
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #0891b2;
+  margin-bottom: 20px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px; /* ขยายช่องว่างระหว่างการ์ดนิดหน่อยให้ดูโล่งขึ้น */
+}
+
+.card {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 320px; /* ⭐️ ความสูงขั้นต่ำ ให้การ์ดยาวขึ้น */
+}
+
+.cardLink {
+  text-decoration: none;
+  display: block;
+}
+
+.imageWrapper {
+  position: relative;
+  height: 180px; /* ⭐️ ขยายความสูงรูปภาพให้สมส่วนกับการ์ดที่ยาวขึ้น */
+  overflow: hidden;
+}
+
+.imageOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(transparent 40%, rgba(0, 0, 0, 0.55));
+  display: flex;
+  align-items: flex-end;
+  padding: 16px;
+}
+
+.placeholder {
+  height: 180px; /* ต้องเท่ากับ imageWrapper */
+  display: flex;
+  align-items: flex-end;
+  padding: 16px;
+}
+
+.region {
+  font-size: 11px; /* ขยายจาก 10px */
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0;
+}
+
+.placeholder .region {
+  color: #fff;
+}
+
+.name {
+  font-size: 18px; /* ขยายจาก 15px */
+  font-weight: 800;
+  color: #fff;
+  margin: 4px 0 0 0;
+}
+
+.details {
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: 12px; /* ⭐️ ตัวนี้แหละครับที่จะทำให้ข้อความไม่เกาะกันเป็นก้อน! */
+}
+
+.location {
+  font-size: 14px; /* ขยายจาก 12px */
+  color: #9ca3af;
+  margin: 0;
+}
+
+.caption {
+  font-size: 14px; /* ขยายจาก 12px */
+  color: #6b7280;
+  font-style: italic;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  margin: 0;
+}
+
+.time {
+  font-size: 14px; /* ขยายจาก 12px */
+  font-weight: 700;
+  color: #0891b2;
+  margin: 0;
+}
+
+.reserveBtn {
+  display: block;
+  text-align: center;
+  background: #0891b2;
+  color: #fff;
+  font-size: 14px; /* ขยายจาก 12px */
+  font-weight: 800;
+  padding: 12px; /* ขยายปุ่มให้ใหญ่ขึ้นนิดนึง */
+  border-radius: 10px;
+  margin-top: auto; /* ⭐️ พระเอกของเรา ดันปุ่มไปติดขอบล่าง */
+  text-decoration: none;
+  transition: opacity 0.2s;
+}
+
+.reserveBtn:hover {
+  opacity: 0.9;
+}

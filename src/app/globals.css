@@ -1,0 +1,73 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  --background: #f4f5f7;
+  --foreground: #111111;
+  --primary: #0891b2;
+  --font-display: 'Playfair Display', serif;
+  --font-body: 'Nunito', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0f1117;
+    --foreground: #f0f0f0;
+  }
+}
+
+html, body {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: 'Nunito', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+a { color: inherit; text-decoration: none; }
+
+.fc-card {
+  text-decoration: none;
+  display: block;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  transition: box-shadow 0.2s, transform 0.2s;
+  color: inherit;
+}
+.fc-card:hover {
+  box-shadow: 0 8px 28px rgba(8,145,178,0.18);
+  transform: translateY(-4px);
+}
+.qk-card {
+  text-decoration: none;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  padding: 16px;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  color: inherit;
+}
+.qk-card:hover {
+  border-color: #0891b2;
+  box-shadow: 0 2px 14px rgba(8,145,178,0.12);
+}
+
+@media (prefers-color-scheme: dark) {
+  html { color-scheme: dark; }
+}
