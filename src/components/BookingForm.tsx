@@ -5,15 +5,22 @@ import { useSession } from "next-auth/react";
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
-export default function BookingForm() {
+// ✅ FIX: define props interface
+interface BookingFormProps {
+  token?: string;
+  initialSpace?: string;
+}
+
+export default function BookingForm({ initialSpace = "" }: BookingFormProps) {
   const { data: session } = useSession();
-  const token = (session?.user as any)?.token;
+  const token = (session?.user as any)?.token; // still pulled from session internally
 
   const [spaces, setSpaces] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
   const [slots, setSlots] = useState<any[]>([]);
 
-  const [spaceId, setSpaceId] = useState("");
+  // ✅ FIX: seed spaceId from prop
+  const [spaceId, setSpaceId] = useState(initialSpace);
   const [roomId, setRoomId] = useState("");
   const [date, setDate] = useState("");
 
@@ -31,6 +38,11 @@ export default function BookingForm() {
       .then((res) => res.json())
       .then((data) => setSpaces(data.data || []));
   }, [token]);
+
+  // ✅ FIX: if initialSpace prop changes after mount, sync it
+  useEffect(() => {
+    if (initialSpace) setSpaceId(initialSpace);
+  }, [initialSpace]);
 
   // ================================
   // LOAD ROOMS
@@ -66,9 +78,7 @@ export default function BookingForm() {
   // ================================
   const toggleSlot = (id: string) => {
     setSelectedSlots((prev) =>
-      prev.includes(id)
-        ? prev.filter((s) => s !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
     );
   };
 
@@ -77,8 +87,7 @@ export default function BookingForm() {
   // ================================
   const handleSubmit = async () => {
     if (!token) return alert("Login first");
-    if (selectedSlots.length === 0)
-      return alert("Select at least one slot");
+    if (selectedSlots.length === 0) return alert("Select at least one slot");
 
     try {
       await fetch(`${BASE}/reservations`, {
@@ -125,10 +134,7 @@ export default function BookingForm() {
 
       {/* DATE */}
       {roomId && (
-        <input
-          type="date"
-          onChange={(e) => setDate(e.target.value)}
-        />
+        <input type="date" onChange={(e) => setDate(e.target.value)} />
       )}
 
       {/* SLOTS */}
@@ -156,10 +162,7 @@ export default function BookingForm() {
       </div>
 
       {/* SUBMIT */}
-      <button
-        onClick={handleSubmit}
-        style={{ marginTop: 20, padding: 12 }}
-      >
+      <button onClick={handleSubmit} style={{ marginTop: 20, padding: 12 }}>
         Confirm Reservation
       </button>
     </div>
