@@ -1,0 +1,50 @@
+.footer {
+    /* ถ้าตอนนี้นำไปใช้ในหน้าพื้นหลังสีเข้ม สามารถปรับสีตรงนี้ได้ตามใจชอบเลยนะครับ */
+    padding: 24px 20px;
+    border-top: 1px solid #374151; /* ปรับสีเส้นขอบให้เข้ากับโหมดมืด (ถ้าต้องการ) */
+    font-family: 'Nunito', sans-serif;
+    margin-top: auto; 
+}
+
+.container {
+    max-width: 1200px; /* ⭐️ ขยายให้กว้างขึ้นเพื่อรับกับกล่องด้านบน */
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; /* ⭐️ บังคับให้ทุกอย่างชิดขอบซ้าย */
+    text-align: left;
+    gap: 12px;
+}
+
+.copyright {
+  font-size: 12px;
+  color: #9ca3af;
+  margin: 0;
+}
+
+.linksWrapper {
+  display: flex;
+  flex-wrap: wrap; 
+  align-items: center;
+  justify-content: flex-start; /* ⭐️ บังคับกลุ่มลิงก์ให้ชิดซ้าย */
+  gap: 8px;
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.link {
+  color: #9ca3af;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.link:hover {
+  color: #fff; /* สว่างขึ้นตอนเอาเมาส์ชี้ */
+  text-decoration: underline;
+}
+
+.separator {
+  color: #6b7280;
+  font-size: 12px;
+}

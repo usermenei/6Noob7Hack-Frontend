@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import TopMenu from "@/components/TopMenu";
+import BottomMenu from "@/components/BottomMenu";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/libs/authOptions";
 import NextAuthProvider from "@/providers/NextAuthProvider";
@@ -27,9 +28,11 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <ReduxProvider>
             <TopMenu />
             {children}
+            <BottomMenu />
           </ReduxProvider>
         </NextAuthProvider>
       </body>
+      
     </html>
   );
 }

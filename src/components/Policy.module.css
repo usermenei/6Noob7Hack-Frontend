@@ -1,0 +1,47 @@
+.container {
+  max-width: 800px;
+  margin: 60px auto; /* เว้นระยะจาก Top Menu */
+  padding: 0 24px;
+  font-family: 'Nunito', sans-serif;
+  color: #4b5563; /* สีข้อความเทาเข้ม อ่านสบายตา */
+  line-height: 1.7; /* ระยะห่างระหว่างบรรทัดให้โปร่งๆ */
+  padding-bottom: 60px;
+}
+
+.title {
+  font-size: 32px;
+  font-weight: 800;
+  color: #111827;
+  margin-bottom: 8px;
+}
+
+.lastUpdated {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-bottom: 32px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e5e7eb; /* เส้นคั่นบางๆ ใต้หัวข้อ */
+}
+
+.sectionTitle {
+  font-size: 20px;
+  font-weight: 700;
+  color: #0891b2; /* ใช้สีธีมของเว็บ CoSpace */
+  margin-top: 40px;
+  margin-bottom: 16px;
+}
+
+.paragraph {
+  margin-bottom: 16px;
+  font-size: 15px;
+}
+
+.list {
+  margin-bottom: 24px;
+  padding-left: 24px;
+}
+
+.listItem {
+  margin-bottom: 8px;
+  font-size: 15px;
+}
