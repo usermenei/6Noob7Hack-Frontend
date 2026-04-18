@@ -48,29 +48,7 @@ export default function BookingList() {
     fetchReservations();
   }, [session]);
 
-  // ✅ CANCEL (status change)
-  const handleCancelStatus = async (id: string) => {
-    if (!session?.user?.token) return;
-    if (!confirm("Are you sure you want to CANCEL this reservation?")) return;
-
-    try {
-      await updateReservationStatus(
-        id,
-        "cancelled",
-        session.user.token as string
-      );
-
-      setReservations((prev) =>
-        prev.map((r) =>
-          r._id === id ? { ...r, status: "cancelled" } : r
-        )
-      );
-    } catch (err: any) {
-      alert(err?.message ?? "Failed to cancel.");
-    }
-  };
-
-  // ✅ FIXED DELETE (same as modal)
+  // ✅ DELETE (permanent)
   const handleDelete = async (id: string) => {
     if (!session?.user?.token) return;
 
@@ -191,8 +169,14 @@ export default function BookingList() {
       </p>
 
       {reservations.length > 0 && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
-          
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+            marginBottom: "24px",
+          }}
+        >
           {isAdmin && (
             <input
               type="text"
@@ -281,7 +265,6 @@ export default function BookingList() {
           reservation={r}
           isAdmin={isAdmin}
           onApprove={handleApprove}
-          onCancel={handleCancelStatus}
           onDelete={handleDelete}
           onEdit={(res) => setEditingRes(res)}
         />

@@ -13,7 +13,7 @@ const formatImageUrl = (url?: string) => {
   return url;
 };
 
-// ✅ -7 hours, 24-hour format
+// -7 hours format
 const toThaiTime = (dateStr: string) => {
   const date = new Date(dateStr);
   date.setHours(date.getHours() - 7);
@@ -27,7 +27,6 @@ interface ReservationCardProps {
   reservation: Reservation;
   isAdmin: boolean;
   onApprove: (id: string) => void;
-  onCancel: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (res: Reservation) => void;
 }
@@ -36,7 +35,6 @@ export default function ReservationCard({
   reservation: r,
   isAdmin,
   onApprove,
-  onCancel,
   onDelete,
   onEdit,
 }: ReservationCardProps) {
@@ -70,10 +68,11 @@ export default function ReservationCard({
     });
   }
 
-  // ✅ Use toThaiTime for both start and end
   let timeDisplay = "-";
   if (isValid(startDateObj) && isValid(endDateObj)) {
-    timeDisplay = `${toThaiTime(slots[0].startTime)} - ${toThaiTime(slots[slots.length - 1].endTime)}`;
+    timeDisplay = `${toThaiTime(slots[0].startTime)} - ${toThaiTime(
+      slots[slots.length - 1].endTime
+    )}`;
   }
 
   const userName = r.user?.name ?? "Unknown User";
@@ -127,7 +126,9 @@ export default function ReservationCard({
             </p>
 
             <span
-              className={`${styles.statusBadge} ${getStatusClass(r.status)}`}
+              className={`${styles.statusBadge} ${getStatusClass(
+                r.status
+              )}`}
             >
               {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
             </span>
@@ -137,27 +138,32 @@ export default function ReservationCard({
 
       <div className={styles.actionsContainer}>
         {(isAdmin || r.status === "pending") && (
-          <button onClick={() => onEdit(r)} className={styles.btnEdit}>
+          <button
+            onClick={() => onEdit(r)}
+            className={styles.btnEdit}
+          >
             Edit
           </button>
         )}
 
         {isAdmin && r.status === "pending" && (
-          <button onClick={() => onApprove(r._id)} className={styles.btnApprove}>
+          <button
+            onClick={() => onApprove(r._id)}
+            className={styles.btnApprove}
+          >
             Approve
           </button>
         )}
 
-        {r.status === "pending" && (
-          <button onClick={() => onCancel(r._id)} className={styles.btnCancel}>
-            Cancel
-          </button>
-        )}
+        {/* ❌ CANCEL BUTTON REMOVED */}
 
         {(isAdmin ||
           r.status === "cancelled" ||
           r.status === "success") && (
-          <button onClick={() => onDelete(r._id)} className={styles.btnDelete}>
+          <button
+            onClick={() => onDelete(r._id)}
+            className={styles.btnDelete}
+          >
             Delete
           </button>
         )}
