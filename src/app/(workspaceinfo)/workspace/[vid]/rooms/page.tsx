@@ -10,7 +10,6 @@ const BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   "http://localhost:5000/api/v1";
 
-// ✅ convert Google Drive links
 const fixImageUrl = (url: string) => {
   if (!url) return "";
   if (url.includes("drive.google.com/uc")) return url;
@@ -40,15 +39,15 @@ export default function RoomsPage({
   const rooms = use(getRooms(vid));
 
   return (
-    <main style={{ background: "#f4f5f7", minHeight: "100vh" }}>
+    <main style={{ background: "#f5f7fb", minHeight: "100vh" }}>
 
-      {/* HEADER */}
+      {/* HERO (Booking.com style) */}
       <div
         style={{
-          background: "linear-gradient(135deg, #0c4a6e 0%, #0891b2 100%)",
-          padding: "40px 24px",
+          background:
+            "linear-gradient(135deg, #003580 0%, #0071c2 100%)",
+          padding: "50px 24px",
           color: "#fff",
-          textAlign: "center",
           position: "relative",
         }}
       >
@@ -59,7 +58,7 @@ export default function RoomsPage({
             left: "20px",
             top: "20px",
             fontSize: "13px",
-            color: "rgba(255,255,255,0.8)",
+            color: "rgba(255,255,255,0.85)",
             textDecoration: "none",
             fontWeight: 600,
           }}
@@ -67,118 +66,171 @@ export default function RoomsPage({
           ← Back
         </Link>
 
-        <h1 style={{ fontSize: "30px", fontWeight: 800 }}>
-          Available Rooms
+        <h1 style={{ fontSize: "34px", fontWeight: 800 }}>
+          Find your perfect room
         </h1>
 
-        <p style={{ fontSize: "14px", opacity: 0.8 }}>
-          Choose your perfect workspace
+        <p style={{ fontSize: "14px", opacity: 0.85 }}>
+          Compare rooms, prices, and availability instantly
         </p>
 
-        <AdminCreateButton vid={vid} />
+        <div style={{ marginTop: "20px" }}>
+          <AdminCreateButton vid={vid} />
+        </div>
       </div>
 
       {/* CONTENT */}
-      <div style={{ maxWidth: "900px", margin: "0 auto", padding: "32px 20px" }}>
+      <div
+        style={{
+          maxWidth: "1000px",
+          margin: "0 auto",
+          padding: "30px 16px",
+        }}
+      >
         {rooms.length === 0 && (
-          <div style={{ textAlign: "center", color: "#6b7280" }}>
+          <div
+            style={{
+              textAlign: "center",
+              color: "#6b7280",
+              marginTop: "40px",
+            }}
+          >
             No rooms available.
           </div>
         )}
 
-        <div style={{ display: "grid", gap: "20px" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
           {rooms.map((room: any) => (
             <div
               key={room._id}
               style={{
+                display: "flex",
                 background: "#fff",
-                borderRadius: "18px",
-                padding: "20px",
-                boxShadow: "0 8px 20px rgba(0,0,0,0.06)",
-                border: "1px solid #e5e7eb",
+                borderRadius: "16px",
+                overflow: "hidden",
+                boxShadow: "0 6px 18px rgba(0,0,0,0.08)",
+                transition: "transform 0.2s ease",
               }}
             >
-              {/* ✅ ROOM IMAGE — same pattern as VenueDetailPage */}
-              {room.picture ? (
-                <div
-                  style={{
-                    position: "relative",
-                    width: "100%",
-                    height: "160px",
-                    borderRadius: "12px",
-                    overflow: "hidden",
-                    marginBottom: "12px",
-                  }}
-                >
+              {/* IMAGE */}
+              <div style={{ width: "260px", minWidth: "260px" }}>
+                {room.picture ? (
                   <Image
                     src={fixImageUrl(room.picture)}
                     alt={room.name}
-                    fill
-                    style={{ objectFit: "cover" }}
+                    width={260}
+                    height={180}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                    }}
                   />
-                </div>
-              ) : (
-                <div
-                  style={{
-                    width: "100%",
-                    height: "160px",
-                    borderRadius: "12px",
-                    background: "linear-gradient(135deg, #0c4a6e 0%, #0891b2 100%)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    fontSize: "48px",
-                    marginBottom: "12px",
-                  }}
-                >
-                  🏢
-                </div>
-              )}
-
-              {/* Room Title */}
-              <h2 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "10px", color: "#111827" }}>
-                {room.name}
-              </h2>
-
-              {/* Info Row */}
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  fontSize: "14px",
-                  marginBottom: "14px",
-                  color: "#374151",
-                }}
-              >
-                <span>👥 {room.capacity} people</span>
-                <span style={{ fontWeight: 700, color: "#0891b2" }}>
-                  ฿{room.price}/hr
-                </span>
+                ) : (
+                  <div
+                    style={{
+                      width: "100%",
+                      height: "180px",
+                      background:
+                        "linear-gradient(135deg, #003580 0%, #0071c2 100%)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "40px",
+                      color: "#fff",
+                    }}
+                  >
+                    🏢
+                  </div>
+                )}
               </div>
 
-              {/* Divider */}
-              <div style={{ height: "1px", background: "#f1f5f9", marginBottom: "14px" }} />
-
-              {/* View Button */}
-              <Link
-                href={`/workspace/${vid}/rooms/${room._id}`}
+              {/* DETAILS */}
+              <div
                 style={{
-                  display: "block",
-                  textAlign: "center",
-                  padding: "12px",
-                  borderRadius: "12px",
-                  background: "#0891b2",
-                  color: "#fff",
-                  fontWeight: 700,
-                  textDecoration: "none",
+                  flex: 1,
+                  padding: "16px 18px",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "space-between",
                 }}
               >
-                View Availability →
-              </Link>
+                <div>
+                  <h2
+                    style={{
+                      fontSize: "20px",
+                      fontWeight: 800,
+                      color: "#1f2937",
+                      marginBottom: "6px",
+                    }}
+                  >
+                    {room.name}
+                  </h2>
 
-              {/* ADMIN ACTIONS */}
-              <AdminRoomActions roomId={room._id} vid={vid} />
+                  <p style={{ fontSize: "14px", color: "#6b7280" }}>
+                    Modern workspace designed for productivity
+                  </p>
+
+                  <div
+                    style={{
+                      marginTop: "10px",
+                      fontSize: "14px",
+                      color: "#374151",
+                    }}
+                  >
+                    👥 Capacity: <b>{room.capacity}</b> people
+                  </div>
+                </div>
+
+                <div>
+                  {/* ADMIN ACTIONS */}
+                  <div style={{ marginBottom: "10px" }}>
+                    <AdminRoomActions roomId={room._id} vid={vid} />
+                  </div>
+
+                  <Link
+                    href={`/workspace/${vid}/rooms/${room._id}`}
+                    style={{
+                      display: "inline-block",
+                      padding: "10px 16px",
+                      borderRadius: "10px",
+                      background: "#0071c2",
+                      color: "#fff",
+                      fontWeight: 700,
+                      textDecoration: "none",
+                      fontSize: "14px",
+                    }}
+                  >
+                    Check availability →
+                  </Link>
+                </div>
+              </div>
+
+              {/* PRICE COLUMN */}
+              <div
+                style={{
+                  width: "140px",
+                  borderLeft: "1px solid #f1f5f9",
+                  display: "flex",
+                  flexDirection: "column",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  padding: "10px",
+                }}
+              >
+                <div
+                  style={{
+                    fontSize: "18px",
+                    fontWeight: 800,
+                    color: "#111827",
+                  }}
+                >
+                  ฿{room.price}
+                </div>
+                <div style={{ fontSize: "12px", color: "#6b7280" }}>
+                  per hour
+                </div>
+              </div>
             </div>
           ))}
         </div>
