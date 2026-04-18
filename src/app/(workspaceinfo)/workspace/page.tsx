@@ -17,11 +17,11 @@ export default async function VenuePage() {
     console.error("Failed to fetch spaces:", err);
   }
 
-  const firstSpaceId = spaces?.[0]?._id;
+  // ✅ FIX HERE
+  const firstSpaceId = spaces?.data?.[0]?._id;
 
   return (
     <main style={{ background: "#f4f5f7", minHeight: "100vh" }}>
-      {/* HEADER */}
       <div
         style={{
           background: "linear-gradient(135deg, #0c4a6e 0%, #0891b2 100%)",
@@ -46,7 +46,6 @@ export default async function VenuePage() {
           Choose a space that fits your work style
         </p>
 
-        {/* ADMIN BUTTON (FIXED) */}
         {role === "admin" && firstSpaceId && (
           <div style={{ marginTop: "20px" }}>
             <Link
@@ -72,7 +71,6 @@ export default async function VenuePage() {
         )}
       </div>
 
-      {/* CONTENT */}
       <div style={{ padding: "24px" }}>
         <WorkspaceCatalog spacesJson={spaces} />
       </div>

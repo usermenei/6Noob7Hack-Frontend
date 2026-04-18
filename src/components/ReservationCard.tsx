@@ -30,11 +30,9 @@ export default function ReservationCard({
   onDelete,
   onEdit,
 }: ReservationCardProps) {
-
-  // ✅ FIX 1: correct path
   const space = r.room?.coworkingSpace;
-  console.log("RES:", r);
-  // ✅ FIX 2: safe + sorted slots
+
+  // ✅ Safe + sorted slots
   const slots = Array.isArray(r.timeSlots)
     ? [...r.timeSlots].sort(
         (a, b) =>
@@ -43,7 +41,7 @@ export default function ReservationCard({
       )
     : [];
 
-  // ✅ FIX 3: extract start/end safely
+  // ✅ Extract start/end safely
   const startDateObj =
     slots.length > 0 ? new Date(slots[0].startTime) : null;
 
@@ -52,28 +50,30 @@ export default function ReservationCard({
       ? new Date(slots[slots.length - 1].endTime)
       : null;
 
-  const isValid = (d: Date | null) =>
-    d && !isNaN(d.getTime());
+  const isValid = (d: Date | null): d is Date =>
+    d !== null && !isNaN(d.getTime());
 
-  // ✅ FIX 4: safe formatting
-  const dateStr = isValid(startDateObj)
-    ? startDateObj.toLocaleDateString("en-GB", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-      })
-    : "-";
+  // ✅ Date formatting
+  let dateStr = "-";
+  if (isValid(startDateObj)) {
+    dateStr = startDateObj.toLocaleDateString("en-GB", {
+      day: "numeric",
+      month: "short",
+      year: "numeric",
+    });
+  }
 
-  const timeDisplay =
-    isValid(startDateObj) && isValid(endDateObj)
-      ? `${startDateObj.toLocaleTimeString("en-GB", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })} - ${endDateObj.toLocaleTimeString("en-GB", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}`
-      : "-";
+  // ✅ Time formatting (FIXED)
+  let timeDisplay = "-";
+  if (isValid(startDateObj) && isValid(endDateObj)) {
+    timeDisplay = `${startDateObj.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })} - ${endDateObj.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })}`;
+  }
 
   const userName = r.user?.name ?? "Unknown User";
 
