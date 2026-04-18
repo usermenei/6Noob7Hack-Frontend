@@ -7,6 +7,7 @@ const BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   "http://localhost:5000/api/v1";
 
+// ✅ -7 hours, 24-hour format
 const toThaiTime = (dateStr: string) => {
   const date = new Date(dateStr);
   date.setHours(date.getHours() - 7);
@@ -16,6 +17,7 @@ const toThaiTime = (dateStr: string) => {
   });
 };
 
+// ✅ props interface
 interface EditModalProps {
   reservation: Reservation;
   token: string;
@@ -53,13 +55,7 @@ export default function EditModal({
         const json = await res.json();
         if (!res.ok) throw new Error(json.message);
 
-        // ✅ Sort slots by startTime so they display continuously with no gaps
-        const sorted = (json.data.slots || []).slice().sort(
-          (a: any, b: any) =>
-            new Date(a.startTime).getTime() - new Date(b.startTime).getTime()
-        );
-
-        setSlots(sorted);
+        setSlots(json.data.slots || []);
         setSelected(originalSlotIds);
       } catch (err: any) {
         setError(err.message);
@@ -69,20 +65,14 @@ export default function EditModal({
     fetchSlots();
   }, [reservation]);
 
-  // ✅ Toggle: available slots can be added, selected slots can be removed
-  const toggleSlot = (slot: any) => {
-    const id = slot.timeSlotId;
-    const isBooked = slot.isBooked && !originalSlotIds.includes(id);
-
-    // Don't allow selecting slots booked by someone else
-    if (isBooked) return;
-
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
-    );
+  const toggleSlot = (id: string) => {
+    const isOriginal = originalSlotIds.includes(id);
+    if (!isOriginal) return;
+    setSelected((prev) => prev.filter((s) => s !== id));
   };
 
   const handleUpdate = async () => {
+    if (selected.length === originalSlotIds.length) return;
     try {
       setLoading(true);
       const res = await fetch(`${BASE}/reservations/${reservation._id}`, {
@@ -139,41 +129,6 @@ export default function EditModal({
     }
   };
 
-  // ✅ Derive slot visual state
-  const getSlotStyle = (slot: any) => {
-    const id = slot.timeSlotId;
-    const isSelected = selected.includes(id);
-    const isBookedByOther = slot.isBooked && !originalSlotIds.includes(id);
-
-    if (isSelected) {
-      return {
-        background: "#0891b2",
-        color: "#fff",
-        cursor: "pointer",
-        opacity: 1,
-      };
-    }
-    if (isBookedByOther) {
-      return {
-        background: "#e5e7eb",
-        color: "#bbb",
-        cursor: "not-allowed",
-        opacity: 0.5,
-      };
-    }
-    // Available (not selected, not booked by other)
-    return {
-      background: "#e5e7eb",
-      color: "#666",
-      cursor: "pointer",
-      opacity: 1,
-    };
-  };
-
-  const hasChanges =
-    selected.length !== originalSlotIds.length ||
-    !selected.every((id) => originalSlotIds.includes(id));
-
   return (
     <div
       style={{
@@ -210,17 +165,22 @@ export default function EditModal({
           }}
         >
           {slots.map((slot) => {
-            const slotStyle = getSlotStyle(slot);
+            const isSelected = selected.includes(slot.timeSlotId);
+            const isOriginal = originalSlotIds.includes(slot.timeSlotId);
+
             return (
               <div
                 key={slot.timeSlotId}
-                onClick={() => toggleSlot(slot)}
+                onClick={() => toggleSlot(slot.timeSlotId)}
                 style={{
                   padding: "10px",
                   borderRadius: "10px",
                   textAlign: "center",
                   border: "1px solid #ddd",
-                  ...slotStyle,
+                  background: isSelected ? "#0891b2" : "#e5e7eb",
+                  color: isSelected ? "#fff" : "#999",
+                  cursor: isOriginal ? "pointer" : "not-allowed",
+                  opacity: isOriginal ? 1 : 0.4,
                 }}
               >
                 <div>{toThaiTime(slot.startTime)}</div>
@@ -287,15 +247,14 @@ export default function EditModal({
 
             <button
               onClick={handleUpdate}
-              // ✅ Save enabled only when selection has actually changed
-              disabled={loading || !hasChanges || selected.length === 0}
+              disabled={loading || selected.length === originalSlotIds.length}
               style={{
                 padding: "10px 16px",
                 borderRadius: "10px",
                 border: "none",
-                background: hasChanges && selected.length > 0 ? "#0891b2" : "#aaa",
+                background: "#0891b2",
                 color: "#fff",
-                cursor: hasChanges && selected.length > 0 ? "pointer" : "not-allowed",
+                cursor: "pointer",
               }}
             >
               Save
