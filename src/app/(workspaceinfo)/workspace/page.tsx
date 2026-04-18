@@ -45,30 +45,6 @@ export default async function VenuePage() {
         <p style={{ fontSize: "14px", opacity: 0.8 }}>
           Choose a space that fits your work style
         </p>
-
-        {role === "admin" && firstSpaceId && (
-          <div style={{ marginTop: "20px" }}>
-            <Link
-              href={`/workspace/${firstSpaceId}/rooms`}
-              style={{
-                textDecoration: "none",
-                display: "block",
-                width: "100%",
-                textAlign: "center",
-                background: "#0891b2",
-                color: "#fff",
-                fontWeight: 800,
-                fontSize: "14px",
-                padding: "13px",
-                borderRadius: "12px",
-                marginTop: "20px",
-                letterSpacing: "0.5px",
-              }}
-            >
-              View Rooms →
-            </Link>
-          </div>
-        )}
       </div>
 
       <div style={{ padding: "24px" }}>

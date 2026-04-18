@@ -16,7 +16,6 @@ export default async function TopMenu() {
 
       <div className={styles.navlinks}>
         <Link href="/workspace" className={styles.navlink}>Spaces</Link>
-        <Link href="/booking" className={styles.navlink}>Booking</Link>
         <Link href="/mybooking" className={styles.navlink}>My Booking</Link>
       </div>
 
