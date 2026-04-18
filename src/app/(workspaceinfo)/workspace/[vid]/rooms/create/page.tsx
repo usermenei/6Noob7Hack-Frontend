@@ -18,11 +18,17 @@ export default function CreateRoomPage({
     name: "",
     capacity: 1,
     price: 0,
-    picture: "", // ✅ ADDED
+    picture: "",
   });
 
   const handleChange = (e: any) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    setForm({
+      ...form,
+      [e.target.name]:
+        e.target.type === "number"
+          ? Number(e.target.value)
+          : e.target.value,
+    });
   };
 
   const handleSubmit = async (e: any) => {
@@ -53,39 +59,140 @@ export default function CreateRoomPage({
   };
 
   return (
-    <div style={{ padding: 30 }}>
-      <h1>Create Room</h1>
+    <div
+      style={{
+        minHeight: "100vh",
+        background: "#f5f7fb",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "30px",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: "520px",
+          background: "#fff",
+          borderRadius: "18px",
+          boxShadow: "0 10px 30px rgba(0,0,0,0.08)",
+          padding: "28px",
+        }}
+      >
+        {/* HEADER */}
+        <h1
+          style={{
+            fontSize: "24px",
+            fontWeight: 800,
+            marginBottom: "6px",
+            color: "#111827",
+          }}
+        >
+          Create New Room
+        </h1>
 
-      <form onSubmit={handleSubmit}>
-        <input name="name" placeholder="Room name" onChange={handleChange} />
-        <br />
+        <p
+          style={{
+            fontSize: "14px",
+            color: "#6b7280",
+            marginBottom: "24px",
+          }}
+        >
+          Add a new workspace room for booking
+        </p>
 
-        <input
-          name="capacity"
-          type="number"
-          placeholder="Capacity"
-          onChange={handleChange}
-        />
-        <br />
+        {/* FORM */}
+        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+          
+          {/* Room Name */}
+          <div>
+            <label style={labelStyle}>Room Name</label>
+            <input
+              name="name"
+              placeholder="e.g. Meeting Room A"
+              onChange={handleChange}
+              style={inputStyle}
+              required
+            />
+          </div>
 
-        <input
-          name="price"
-          type="number"
-          placeholder="Price"
-          onChange={handleChange}
-        />
-        <br />
+          {/* Capacity */}
+          <div>
+            <label style={labelStyle}>Capacity</label>
+            <input
+              name="capacity"
+              type="number"
+              min={1}
+              placeholder="Number of people"
+              onChange={handleChange}
+              style={inputStyle}
+              required
+            />
+          </div>
 
-        {/* ✅ NEW: picture */}
-        <input
-          name="picture"
-          placeholder="Image URL"
-          onChange={handleChange}
-        />
-        <br />
+          {/* Price */}
+          <div>
+            <label style={labelStyle}>Price (per hour)</label>
+            <input
+              name="price"
+              type="number"
+              min={0}
+              placeholder="e.g. 200"
+              onChange={handleChange}
+              style={inputStyle}
+              required
+            />
+          </div>
 
-        <button type="submit">Create Room</button>
-      </form>
+          {/* Image */}
+          <div>
+            <label style={labelStyle}>Room Image URL</label>
+            <input
+              name="picture"
+              placeholder="Paste image URL (Google Drive or direct link)"
+              onChange={handleChange}
+              style={inputStyle}
+            />
+          </div>
+
+          {/* BUTTON */}
+          <button type="submit" style={buttonStyle}>
+            Create Room →
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
+
+/* ===== Styles ===== */
+
+const labelStyle: React.CSSProperties = {
+  fontSize: "13px",
+  fontWeight: 600,
+  color: "#374151",
+  marginBottom: "6px",
+  display: "block",
+};
+
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: "12px 12px",
+  borderRadius: "10px",
+  border: "1px solid #e5e7eb",
+  outline: "none",
+  fontSize: "14px",
+  transition: "0.2s",
+};
+
+const buttonStyle: React.CSSProperties = {
+  marginTop: "10px",
+  padding: "12px",
+  borderRadius: "12px",
+  background: "#0071c2",
+  color: "#fff",
+  fontWeight: 700,
+  border: "none",
+  cursor: "pointer",
+  fontSize: "15px",
+};
