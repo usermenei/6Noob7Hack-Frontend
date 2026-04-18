@@ -1,18 +1,32 @@
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
+const BASE =
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  "http://localhost:5000/api/v1";
 
 export default async function deleteReservation(
-  reservationId: string,
+  id: string,
   token: string
-): Promise<void> {
-  const response = await fetch(`${BASE}/reservations/${reservationId}`, {
+) {
+  const res = await fetch(`${BASE}/reservations/${id}`, {
     method: "DELETE",
     headers: {
-      authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${token}`,
     },
   });
 
-  if (!response.ok) {
-    const err = await response.json().catch(() => ({}));
-    throw new Error(err?.message ?? "Failed to delete reservation");
+  // ✅ SAFELY HANDLE NON-JSON RESPONSE
+  const text = await res.text();
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    console.error("❌ Not JSON response:", text);
+    throw new Error("Server returned invalid response (HTML?)");
   }
+
+  if (!res.ok) {
+    throw new Error(data.message || "Delete failed");
+  }
+
+  return data;
 }

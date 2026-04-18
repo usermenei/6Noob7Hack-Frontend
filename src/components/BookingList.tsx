@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import getReservations, { Reservation } from "@/libs/getReservations";
-import deleteReservation from "@/libs/deleteReservation";
 import confirmReservation from "@/libs/confirmReservation";
 import updateReservationStatus from "@/libs/updateReservationStatus";
 import Link from "next/link";
@@ -26,6 +25,10 @@ export default function BookingList() {
 
   const isAdmin = (session?.user as any)?.role === "admin";
 
+  const BASE =
+    process.env.NEXT_PUBLIC_BACKEND_URL ||
+    "http://localhost:5000/api/v1";
+
   const fetchReservations = async () => {
     if (!session?.user?.token) {
       setLoading(false);
@@ -45,6 +48,7 @@ export default function BookingList() {
     fetchReservations();
   }, [session]);
 
+  // ✅ CANCEL (status change)
   const handleCancelStatus = async (id: string) => {
     if (!session?.user?.token) return;
     if (!confirm("Are you sure you want to CANCEL this reservation?")) return;
@@ -66,6 +70,7 @@ export default function BookingList() {
     }
   };
 
+  // ✅ FIXED DELETE (same as modal)
   const handleDelete = async (id: string) => {
     if (!session?.user?.token) return;
 
@@ -75,12 +80,24 @@ export default function BookingList() {
 
     const confirmMsg = isUserClearingHistory
       ? "Do you want to remove this completed reservation from your history?"
-      : "Are you sure you want to PERMANENTLY DELETE this record?";
+      : "⚠️ Permanently delete this reservation? This cannot be undone.";
 
     if (!confirm(confirmMsg)) return;
 
     try {
-      await deleteReservation(id, session.user.token as string);
+      const res = await fetch(
+        `${BASE}/reservations/${id}/permanent`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${session.user.token}`,
+          },
+        }
+      );
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message);
+
       setReservations((prev) =>
         prev.filter((r) => r._id !== id)
       );
@@ -89,6 +106,7 @@ export default function BookingList() {
     }
   };
 
+  // ✅ APPROVE
   const handleApprove = async (id: string) => {
     if (!session?.user?.token) return;
     if (!confirm("Approve this reservation?")) return;
@@ -111,7 +129,7 @@ export default function BookingList() {
     fetchReservations();
   };
 
-  // ✅ FILTER (fixed structure)
+  // ✅ FILTER
   const filteredReservations = reservations.filter((r) => {
     const userName = r.user?.name?.toLowerCase() || "";
     const spaceName =
@@ -132,7 +150,7 @@ export default function BookingList() {
     return matchUser && matchSpace && matchStatus;
   });
 
-  // ✅ SORT (use timeSlots instead of apptDate)
+  // ✅ SORT
   const sortedReservations = [...filteredReservations].sort(
     (a, b) => {
       const getStart = (r: Reservation) =>

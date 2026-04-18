@@ -1,156 +1,319 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import DatePicker from "react-datepicker";
-import "react-datepicker/dist/react-datepicker.css";
-import updateReservation from "@/libs/updateReservation";
-import getCoworkingSpaces, { CoworkingSpaceItem } from "@/libs/getCoworkingSpaces";
-import { Reservation } from "@/libs/getReservations";
-import styles from "./BookingList.module.css";
+import { useEffect, useState } from "react";
 
-interface EditModalProps {
-  reservation: Reservation;
-  isAdmin: boolean;
-  token: string;
-  onClose: () => void;
-  onSuccess: () => void;
-}
+const BASE =
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  "http://localhost:5000/api/v1";
 
 export default function EditModal({
   reservation,
-  isAdmin,
   token,
   onClose,
   onSuccess,
-}: EditModalProps) {
-  const safeDate = reservation.timeSlots?.[0]?.startTime
-    ? new Date(reservation.timeSlots[0].startTime)
-    : null;
-
-  const [date, setDate] = useState<Date | null>(safeDate);
-  const [startTime, setStartTime] = useState("09:00");
-  const [endTime, setEndTime] = useState("10:00");
-
-  const [spaceId, setSpaceId] = useState(reservation.room?._id || "");
-  const [spaces, setSpaces] = useState<CoworkingSpaceItem[]>([]);
+  isAdmin,
+}: any) {
+  const [slots, setSlots] = useState<any[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const [step, setStep] = useState<"date" | "time">("date");
+  const originalSlotIds = reservation.timeSlots.map(
+    (s: any) => s._id
+  );
 
-  // load spaces
+  // =====================================================
+  // FETCH SLOTS
+  // =====================================================
   useEffect(() => {
-    (async () => {
-      const json = await getCoworkingSpaces(token);
-      setSpaces(json.data);
-    })();
-  }, [token]);
+    const fetchSlots = async () => {
+      try {
+        const firstSlot = reservation.timeSlots[0];
+        const date = new Date(firstSlot.startTime)
+          .toISOString()
+          .split("T")[0];
 
-  // STEP 1 → after date selected
-  const handleDateSelect = (d: Date | null) => {
-    setDate(d);
+        const res = await fetch(
+          `${BASE}/coworkingspaces/${reservation.room.coworkingSpace._id}/rooms/${reservation.room._id}?date=${date}`
+        );
 
-    if (d) {
-      setStep("time"); // unlock time selection
-    }
+        const json = await res.json();
+        if (!res.ok) throw new Error(json.message);
+
+        setSlots(json.data.slots || []);
+        setSelected(originalSlotIds);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    };
+
+    fetchSlots();
+  }, [reservation]);
+
+  // =====================================================
+  // TOGGLE SLOT (ONLY REMOVE)
+  // =====================================================
+  const toggleSlot = (id: string) => {
+    const isOriginal = originalSlotIds.includes(id);
+
+    // ❌ cannot add new slots
+    if (!isOriginal) return;
+
+    setSelected((prev) => prev.filter((s) => s !== id));
   };
 
-  const handleSave = async () => {
-    if (!date || !spaceId) {
-      alert("Select date first");
-      return;
-    }
-
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, "0");
-    const dd = String(date.getDate()).padStart(2, "0");
-
-    const base = `${yyyy}-${mm}-${dd}`;
-
-    const start = new Date(`${base}T${startTime}:00`);
-    const end = new Date(`${base}T${endTime}:00`);
-
-    if (end <= start) {
-      alert("Invalid time range");
-      return;
-    }
-
-    setLoading(true);
+  // =====================================================
+  // UPDATE (SHRINK)
+  // =====================================================
+  const handleUpdate = async () => {
+    if (selected.length === originalSlotIds.length) return;
 
     try {
-      await updateReservation(
-        reservation._id,
+      setLoading(true);
+
+      const res = await fetch(
+        `${BASE}/reservations/${reservation._id}`,
         {
-          apptDate: start.toISOString(),
-          apptEndDate: end.toISOString(),
-          coworkingSpace: spaceId,
-          ...(isAdmin ? { status: reservation.status } : {}),
-        },
-        token
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            timeSlotIds: selected,
+          }),
+        }
       );
 
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message);
+
       onSuccess();
-    } catch (e: any) {
-      alert(e.message);
+    } catch (err: any) {
+      setError(err.message);
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className={styles.modalOverlay}>
-      <div style={{ width: 420, background: "#fff", padding: 25, borderRadius: 12 }}>
+  // =====================================================
+  // CANCEL (status change)
+  // =====================================================
+  const handleCancelReservation = async () => {
+    if (!confirm("Cancel this reservation?")) return;
 
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        `${BASE}/reservations/${reservation._id}`,
+        {
+          method: "DELETE", // cancel
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message);
+
+      onSuccess();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // =====================================================
+  // PERMANENT DELETE
+  // =====================================================
+  const handlePermanentDelete = async () => {
+    if (
+      !confirm(
+        "⚠️ Permanently delete this reservation? This cannot be undone."
+      )
+    )
+      return;
+
+    try {
+      setLoading(true);
+
+      const res = await fetch(
+        `${BASE}/reservations/${reservation._id}/permanent`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message);
+
+      onSuccess();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // =====================================================
+  // UI
+  // =====================================================
+  return (
+    <div
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(0,0,0,0.5)",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        zIndex: 1000,
+      }}
+    >
+      <div
+        style={{
+          background: "#fff",
+          padding: "24px",
+          borderRadius: "16px",
+          width: "600px",
+          maxHeight: "80vh",
+          overflow: "auto",
+        }}
+      >
         <h2>Edit Reservation</h2>
 
-        {/* STEP 1: DATE */}
-        <label>Select Date</label>
-        <DatePicker
-          selected={date}
-          onChange={handleDateSelect}
-          minDate={new Date()}
-        />
+        {error && <p style={{ color: "red" }}>{error}</p>}
 
-        {/* STEP 2: TIME (LOCKED UNTIL DATE PICKED) */}
-        <div style={{ opacity: step === "time" ? 1 : 0.4, pointerEvents: step === "time" ? "auto" : "none" }}>
-          
-          <label>Start Time</label>
-          <input
-            type="time"
-            value={startTime}
-            onChange={(e) => {
-              setStartTime(e.target.value);
+        {/* SLOT GRID */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns:
+              "repeat(auto-fill, minmax(120px, 1fr))",
+            gap: "10px",
+            marginTop: "16px",
+          }}
+        >
+          {slots.map((slot) => {
+            const isSelected = selected.includes(slot.timeSlotId);
+            const isOriginal = originalSlotIds.includes(
+              slot.timeSlotId
+            );
 
-              if (endTime <= e.target.value) {
-                const [h, m] = e.target.value.split(":");
-                setEndTime(`${String(+h + 1).padStart(2, "0")}:${m}`);
-              }
-            }}
-          />
+            return (
+              <div
+                key={slot.timeSlotId}
+                onClick={() => toggleSlot(slot.timeSlotId)}
+                style={{
+                  padding: "10px",
+                  borderRadius: "10px",
+                  textAlign: "center",
+                  border: "1px solid #ddd",
+                  background: isSelected
+                    ? "#0891b2"
+                    : "#e5e7eb",
+                  color: isSelected ? "#fff" : "#999",
+                  cursor: isOriginal
+                    ? "pointer"
+                    : "not-allowed",
+                  opacity: isOriginal ? 1 : 0.4,
+                }}
+              >
+                <div>
+                  {new Date(slot.startTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
 
-          <label>End Time</label>
-          <input
-            type="time"
-            value={endTime}
-            onChange={(e) => setEndTime(e.target.value)}
-          />
+                <div>
+                  {new Date(slot.endTime).toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
+              </div>
+            );
+          })}
         </div>
 
-        {/* SPACE */}
-        <select value={spaceId} onChange={(e) => setSpaceId(e.target.value)}>
-          {spaces.map((s) => (
-            <option key={s._id} value={s._id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-
         {/* BUTTONS */}
-        <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={onClose}>Cancel</button>
+        <div
+          style={{
+            marginTop: "20px",
+            display: "flex",
+            justifyContent: "space-between",
+            gap: "10px",
+          }}
+        >
+          {/* LEFT */}
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              onClick={handleCancelReservation}
+              style={{
+                padding: "10px 16px",
+                borderRadius: "10px",
+                border: "none",
+                background: "#f59e0b",
+                color: "#fff",
+              }}
+            >
+              Cancel
+            </button>
 
-          <button onClick={handleSave} disabled={loading}>
-            Save
-          </button>
+            {isAdmin && (
+              <button
+                onClick={handlePermanentDelete}
+                style={{
+                  padding: "10px 16px",
+                  borderRadius: "10px",
+                  border: "none",
+                  background: "#ef4444",
+                  color: "#fff",
+                }}
+              >
+                Delete
+              </button>
+            )}
+          </div>
+
+          {/* RIGHT */}
+          <div style={{ display: "flex", gap: "10px" }}>
+            <button
+              onClick={onClose}
+              style={{
+                padding: "10px 16px",
+                borderRadius: "10px",
+                border: "none",
+                background: "#ddd",
+              }}
+            >
+              Close
+            </button>
+
+            <button
+              onClick={handleUpdate}
+              disabled={
+                loading ||
+                selected.length === originalSlotIds.length
+              }
+              style={{
+                padding: "10px 16px",
+                borderRadius: "10px",
+                border: "none",
+                background: "#0891b2",
+                color: "#fff",
+              }}
+            >
+              Save
+            </button>
+          </div>
         </div>
       </div>
     </div>
