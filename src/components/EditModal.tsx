@@ -1,10 +1,30 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Reservation } from "@/libs/getReservations";
 
 const BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   "http://localhost:5000/api/v1";
+
+// ✅ -7 hours, 24-hour format
+const toThaiTime = (dateStr: string) => {
+  const date = new Date(dateStr);
+  date.setHours(date.getHours() - 7);
+  return date.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+// ✅ props interface
+interface EditModalProps {
+  reservation: Reservation;
+  token: string;
+  isAdmin: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+}
 
 export default function EditModal({
   reservation,
@@ -12,19 +32,14 @@ export default function EditModal({
   onClose,
   onSuccess,
   isAdmin,
-}: any) {
+}: EditModalProps) {
   const [slots, setSlots] = useState<any[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const originalSlotIds = reservation.timeSlots.map(
-    (s: any) => s._id
-  );
+  const originalSlotIds = reservation.timeSlots.map((s: any) => s._id);
 
-  // =====================================================
-  // FETCH SLOTS
-  // =====================================================
   useEffect(() => {
     const fetchSlots = async () => {
       try {
@@ -50,44 +65,26 @@ export default function EditModal({
     fetchSlots();
   }, [reservation]);
 
-  // =====================================================
-  // TOGGLE SLOT (ONLY REMOVE)
-  // =====================================================
   const toggleSlot = (id: string) => {
     const isOriginal = originalSlotIds.includes(id);
-
-    // ❌ cannot add new slots
     if (!isOriginal) return;
-
     setSelected((prev) => prev.filter((s) => s !== id));
   };
 
-  // =====================================================
-  // UPDATE (SHRINK)
-  // =====================================================
   const handleUpdate = async () => {
     if (selected.length === originalSlotIds.length) return;
-
     try {
       setLoading(true);
-
-      const res = await fetch(
-        `${BASE}/reservations/${reservation._id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({
-            timeSlotIds: selected,
-          }),
-        }
-      );
-
+      const res = await fetch(`${BASE}/reservations/${reservation._id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ timeSlotIds: selected }),
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message);
-
       onSuccess();
     } catch (err: any) {
       setError(err.message);
@@ -96,28 +93,16 @@ export default function EditModal({
     }
   };
 
-  // =====================================================
-  // CANCEL (status change)
-  // =====================================================
   const handleCancelReservation = async () => {
     if (!confirm("Cancel this reservation?")) return;
-
     try {
       setLoading(true);
-
-      const res = await fetch(
-        `${BASE}/reservations/${reservation._id}`,
-        {
-          method: "DELETE", // cancel
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
+      const res = await fetch(`${BASE}/reservations/${reservation._id}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message);
-
       onSuccess();
     } catch (err: any) {
       setError(err.message);
@@ -126,33 +111,16 @@ export default function EditModal({
     }
   };
 
-  // =====================================================
-  // PERMANENT DELETE
-  // =====================================================
   const handlePermanentDelete = async () => {
-    if (
-      !confirm(
-        "⚠️ Permanently delete this reservation? This cannot be undone."
-      )
-    )
-      return;
-
+    if (!confirm("⚠️ Permanently delete this reservation? This cannot be undone.")) return;
     try {
       setLoading(true);
-
-      const res = await fetch(
-        `${BASE}/reservations/${reservation._id}/permanent`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
+      const res = await fetch(`${BASE}/reservations/${reservation._id}/permanent`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message);
-
       onSuccess();
     } catch (err: any) {
       setError(err.message);
@@ -161,9 +129,6 @@ export default function EditModal({
     }
   };
 
-  // =====================================================
-  // UI
-  // =====================================================
   return (
     <div
       style={{
@@ -194,17 +159,14 @@ export default function EditModal({
         <div
           style={{
             display: "grid",
-            gridTemplateColumns:
-              "repeat(auto-fill, minmax(120px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
             gap: "10px",
             marginTop: "16px",
           }}
         >
           {slots.map((slot) => {
             const isSelected = selected.includes(slot.timeSlotId);
-            const isOriginal = originalSlotIds.includes(
-              slot.timeSlotId
-            );
+            const isOriginal = originalSlotIds.includes(slot.timeSlotId);
 
             return (
               <div
@@ -215,29 +177,14 @@ export default function EditModal({
                   borderRadius: "10px",
                   textAlign: "center",
                   border: "1px solid #ddd",
-                  background: isSelected
-                    ? "#0891b2"
-                    : "#e5e7eb",
+                  background: isSelected ? "#0891b2" : "#e5e7eb",
                   color: isSelected ? "#fff" : "#999",
-                  cursor: isOriginal
-                    ? "pointer"
-                    : "not-allowed",
+                  cursor: isOriginal ? "pointer" : "not-allowed",
                   opacity: isOriginal ? 1 : 0.4,
                 }}
               >
-                <div>
-                  {new Date(slot.startTime).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
-
-                <div>
-                  {new Date(slot.endTime).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
+                <div>{toThaiTime(slot.startTime)}</div>
+                <div>{toThaiTime(slot.endTime)}</div>
               </div>
             );
           })}
@@ -252,7 +199,6 @@ export default function EditModal({
             gap: "10px",
           }}
         >
-          {/* LEFT */}
           <div style={{ display: "flex", gap: "10px" }}>
             <button
               onClick={handleCancelReservation}
@@ -262,6 +208,7 @@ export default function EditModal({
                 border: "none",
                 background: "#f59e0b",
                 color: "#fff",
+                cursor: "pointer",
               }}
             >
               Cancel
@@ -276,6 +223,7 @@ export default function EditModal({
                   border: "none",
                   background: "#ef4444",
                   color: "#fff",
+                  cursor: "pointer",
                 }}
               >
                 Delete
@@ -283,7 +231,6 @@ export default function EditModal({
             )}
           </div>
 
-          {/* RIGHT */}
           <div style={{ display: "flex", gap: "10px" }}>
             <button
               onClick={onClose}
@@ -292,6 +239,7 @@ export default function EditModal({
                 borderRadius: "10px",
                 border: "none",
                 background: "#ddd",
+                cursor: "pointer",
               }}
             >
               Close
@@ -299,16 +247,14 @@ export default function EditModal({
 
             <button
               onClick={handleUpdate}
-              disabled={
-                loading ||
-                selected.length === originalSlotIds.length
-              }
+              disabled={loading || selected.length === originalSlotIds.length}
               style={{
                 padding: "10px 16px",
                 borderRadius: "10px",
                 border: "none",
                 background: "#0891b2",
                 color: "#fff",
+                cursor: "pointer",
               }}
             >
               Save

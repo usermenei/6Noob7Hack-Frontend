@@ -13,6 +13,16 @@ const formatImageUrl = (url?: string) => {
   return url;
 };
 
+// ✅ -7 hours, 24-hour format
+const toThaiTime = (dateStr: string) => {
+  const date = new Date(dateStr);
+  date.setHours(date.getHours() - 7);
+  return date.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 interface ReservationCardProps {
   reservation: Reservation;
   isAdmin: boolean;
@@ -32,7 +42,6 @@ export default function ReservationCard({
 }: ReservationCardProps) {
   const space = r.room?.coworkingSpace;
 
-  // ✅ Safe + sorted slots
   const slots = Array.isArray(r.timeSlots)
     ? [...r.timeSlots].sort(
         (a, b) =>
@@ -41,7 +50,6 @@ export default function ReservationCard({
       )
     : [];
 
-  // ✅ Extract start/end safely
   const startDateObj =
     slots.length > 0 ? new Date(slots[0].startTime) : null;
 
@@ -53,7 +61,6 @@ export default function ReservationCard({
   const isValid = (d: Date | null): d is Date =>
     d !== null && !isNaN(d.getTime());
 
-  // ✅ Date formatting
   let dateStr = "-";
   if (isValid(startDateObj)) {
     dateStr = startDateObj.toLocaleDateString("en-GB", {
@@ -63,16 +70,10 @@ export default function ReservationCard({
     });
   }
 
-  // ✅ Time formatting (FIXED)
+  // ✅ Use toThaiTime for both start and end
   let timeDisplay = "-";
   if (isValid(startDateObj) && isValid(endDateObj)) {
-    timeDisplay = `${startDateObj.toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-    })} - ${endDateObj.toLocaleTimeString("en-GB", {
-      hour: "2-digit",
-      minute: "2-digit",
-    })}`;
+    timeDisplay = `${toThaiTime(slots[0].startTime)} - ${toThaiTime(slots[slots.length - 1].endTime)}`;
   }
 
   const userName = r.user?.name ?? "Unknown User";
@@ -126,9 +127,7 @@ export default function ReservationCard({
             </p>
 
             <span
-              className={`${styles.statusBadge} ${getStatusClass(
-                r.status
-              )}`}
+              className={`${styles.statusBadge} ${getStatusClass(r.status)}`}
             >
               {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
             </span>

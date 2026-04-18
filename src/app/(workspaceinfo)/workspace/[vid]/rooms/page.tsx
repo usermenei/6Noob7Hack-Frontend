@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { use } from "react";
 import {
@@ -9,36 +10,24 @@ const BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   "http://localhost:5000/api/v1";
 
-// 🔥 FIX: convert Google Drive links safely
+// ✅ convert Google Drive links
 const fixImageUrl = (url: string) => {
   if (!url) return "";
-
-  // already good format
   if (url.includes("drive.google.com/uc")) return url;
-
-  // convert /file/d/ID/view
   const match = url.match(/\/d\/(.*?)\//);
   if (match) {
     return `https://drive.google.com/uc?export=view&id=${match[1]}`;
   }
-
   return url;
 };
 
 async function getRooms(vid: string) {
   const res = await fetch(
     `${BASE}/coworkingspaces/${vid}/rooms`,
-    {
-      cache: "no-store",
-    }
+    { cache: "no-store" }
   );
-
   const json = await res.json();
-
-  if (!res.ok) {
-    throw new Error(json?.message || "Failed to load rooms");
-  }
-
+  if (!res.ok) throw new Error(json?.message || "Failed to load rooms");
   return json.data;
 }
 
@@ -52,7 +41,7 @@ export default function RoomsPage({
 
   return (
     <main style={{ background: "#f4f5f7", minHeight: "100vh" }}>
-      
+
       {/* HEADER */}
       <div
         style={{
@@ -90,13 +79,7 @@ export default function RoomsPage({
       </div>
 
       {/* CONTENT */}
-      <div
-        style={{
-          maxWidth: "900px",
-          margin: "0 auto",
-          padding: "32px 20px",
-        }}
-      >
+      <div style={{ maxWidth: "900px", margin: "0 auto", padding: "32px 20px" }}>
         {rooms.length === 0 && (
           <div style={{ textAlign: "center", color: "#6b7280" }}>
             No rooms available.
@@ -115,10 +98,11 @@ export default function RoomsPage({
                 border: "1px solid #e5e7eb",
               }}
             >
-              {/* ✅ ROOM IMAGE (FIXED) */}
-              {room.picture && (
+              {/* ✅ ROOM IMAGE — same pattern as VenueDetailPage */}
+              {room.picture ? (
                 <div
                   style={{
+                    position: "relative",
                     width: "100%",
                     height: "160px",
                     borderRadius: "12px",
@@ -126,27 +110,33 @@ export default function RoomsPage({
                     marginBottom: "12px",
                   }}
                 >
-                  <img
+                  <Image
                     src={fixImageUrl(room.picture)}
                     alt={room.name}
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      objectFit: "cover",
-                    }}
+                    fill
+                    style={{ objectFit: "cover" }}
                   />
+                </div>
+              ) : (
+                <div
+                  style={{
+                    width: "100%",
+                    height: "160px",
+                    borderRadius: "12px",
+                    background: "linear-gradient(135deg, #0c4a6e 0%, #0891b2 100%)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    fontSize: "48px",
+                    marginBottom: "12px",
+                  }}
+                >
+                  🏢
                 </div>
               )}
 
               {/* Room Title */}
-              <h2
-                style={{
-                  fontSize: "20px",
-                  fontWeight: 800,
-                  marginBottom: "10px",
-                  color: "#111827",
-                }}
-              >
+              <h2 style={{ fontSize: "20px", fontWeight: 800, marginBottom: "10px", color: "#111827" }}>
                 {room.name}
               </h2>
 
@@ -168,13 +158,7 @@ export default function RoomsPage({
               </div>
 
               {/* Divider */}
-              <div
-                style={{
-                  height: "1px",
-                  background: "#f1f5f9",
-                  marginBottom: "14px",
-                }}
-              />
+              <div style={{ height: "1px", background: "#f1f5f9", marginBottom: "14px" }} />
 
               {/* View Button */}
               <Link

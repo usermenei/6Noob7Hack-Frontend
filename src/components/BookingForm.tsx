@@ -5,7 +5,6 @@ import { useSession } from "next-auth/react";
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
-// ✅ FIX: define props interface
 interface BookingFormProps {
   token?: string;
   initialSpace?: string;
@@ -13,25 +12,20 @@ interface BookingFormProps {
 
 export default function BookingForm({ initialSpace = "" }: BookingFormProps) {
   const { data: session } = useSession();
-  const token = (session?.user as any)?.token; // still pulled from session internally
+  const token = (session?.user as any)?.token;
 
   const [spaces, setSpaces] = useState<any[]>([]);
   const [rooms, setRooms] = useState<any[]>([]);
   const [slots, setSlots] = useState<any[]>([]);
 
-  // ✅ FIX: seed spaceId from prop
   const [spaceId, setSpaceId] = useState(initialSpace);
   const [roomId, setRoomId] = useState("");
   const [date, setDate] = useState("");
 
   const [selectedSlots, setSelectedSlots] = useState<string[]>([]);
 
-  // ================================
-  // LOAD SPACES
-  // ================================
   useEffect(() => {
     if (!token) return;
-
     fetch(`${BASE}/coworkingspaces`, {
       headers: { authorization: `Bearer ${token}` },
     })
@@ -39,17 +33,12 @@ export default function BookingForm({ initialSpace = "" }: BookingFormProps) {
       .then((data) => setSpaces(data.data || []));
   }, [token]);
 
-  // ✅ FIX: if initialSpace prop changes after mount, sync it
   useEffect(() => {
     if (initialSpace) setSpaceId(initialSpace);
   }, [initialSpace]);
 
-  // ================================
-  // LOAD ROOMS
-  // ================================
   useEffect(() => {
     if (!spaceId || !token) return;
-
     fetch(`${BASE}/coworkingspaces/${spaceId}/rooms`, {
       headers: { authorization: `Bearer ${token}` },
     })
@@ -57,34 +46,21 @@ export default function BookingForm({ initialSpace = "" }: BookingFormProps) {
       .then((data) => setRooms(data.data || []));
   }, [spaceId, token]);
 
-  // ================================
-  // LOAD SLOTS
-  // ================================
   useEffect(() => {
     if (!roomId || !date || !token) return;
-
-    fetch(
-      `${BASE}/coworkingspaces/${spaceId}/rooms/${roomId}?date=${date}`,
-      {
-        headers: { authorization: `Bearer ${token}` },
-      }
-    )
+    fetch(`${BASE}/coworkingspaces/${spaceId}/rooms/${roomId}?date=${date}`, {
+      headers: { authorization: `Bearer ${token}` },
+    })
       .then((res) => res.json())
       .then((data) => setSlots(data.data?.slots || []));
   }, [roomId, date, token]);
 
-  // ================================
-  // TOGGLE SLOT
-  // ================================
   const toggleSlot = (id: string) => {
     setSelectedSlots((prev) =>
       prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
     );
   };
 
-  // ================================
-  // SUBMIT
-  // ================================
   const handleSubmit = async () => {
     if (!token) return alert("Login first");
     if (selectedSlots.length === 0) return alert("Select at least one slot");
@@ -155,8 +131,18 @@ export default function BookingForm({ initialSpace = "" }: BookingFormProps) {
               color: slot.status === "booked" ? "white" : "black",
             }}
           >
-            {new Date(slot.startTime).toLocaleTimeString()} -
-            {new Date(slot.endTime).toLocaleTimeString()}
+            {/* ✅ THAI TIME */}
+            {new Date(slot.startTime).toLocaleTimeString("th-TH", {
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone: "Asia/Bangkok",
+            })}
+            {" - "}
+            {new Date(slot.endTime).toLocaleTimeString("th-TH", {
+              hour: "2-digit",
+              minute: "2-digit",
+              timeZone: "Asia/Bangkok",
+            })}
           </button>
         ))}
       </div>

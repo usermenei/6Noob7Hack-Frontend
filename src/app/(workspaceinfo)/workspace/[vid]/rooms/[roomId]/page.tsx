@@ -4,10 +4,29 @@ import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
+import Image from "next/image";
 
 const BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   "http://localhost:5000/api/v1";
+
+const fixImageUrl = (url: string) => {
+  if (!url) return "";
+  if (url.includes("drive.google.com/uc")) return url;
+  const match = url.match(/\/d\/(.*?)\//);
+  if (match) return `https://drive.google.com/uc?export=view&id=${match[1]}`;
+  return url;
+};
+
+// ✅ Thai time 24-hour
+const toThaiTime = (dateStr: string) => {
+  const date = new Date(dateStr);
+  date.setHours(date.getHours() - 7);
+  return date.toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
 
 export default function RoomPage() {
   const { vid, roomId } = useParams();
@@ -24,21 +43,14 @@ export default function RoomPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // =====================================================
-  // FETCH ROOM + SLOTS
-  // =====================================================
   const fetchData = async () => {
     if (!date) return;
-
     try {
       const res = await fetch(
         `${BASE}/coworkingspaces/${vid}/rooms/${roomId}?date=${date}`
       );
-
       const json = await res.json();
-
       if (!res.ok) throw new Error(json.message);
-
       setRoom(json.data);
       setSlots(json.data.slots || []);
       setSelected([]);
@@ -51,35 +63,18 @@ export default function RoomPage() {
     if (date) fetchData();
   }, [date]);
 
-  // =====================================================
-  // SLOT SELECT
-  // =====================================================
   const toggleSlot = (id: string, status: string) => {
     if (status === "booked") return;
-
     setSelected((prev) =>
-      prev.includes(id)
-        ? prev.filter((s) => s !== id)
-        : [...prev, id]
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
     );
   };
 
-  // =====================================================
-  // BOOKING
-  // =====================================================
   const handleReserve = async () => {
     setError("");
     setSuccess("");
-
-    if (!token) {
-      setError("Please login first");
-      return;
-    }
-
-    if (selected.length === 0) {
-      setError("Select at least one time slot");
-      return;
-    }
+    if (!token) { setError("Please login first"); return; }
+    if (selected.length === 0) { setError("Select at least one time slot"); return; }
 
     try {
       const res = await fetch(`${BASE}/reservations`, {
@@ -88,15 +83,10 @@ export default function RoomPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({
-          timeSlotIds: selected,
-        }),
+        body: JSON.stringify({ timeSlotIds: selected }),
       });
-
       const json = await res.json();
-
       if (!res.ok) throw new Error(json.message);
-
       setSuccess("Booking successful 🎉");
       fetchData();
     } catch (err: any) {
@@ -104,26 +94,16 @@ export default function RoomPage() {
     }
   };
 
-  // =====================================================
-  // 🗑 DELETE ROOM (ADMIN ONLY)
-  // =====================================================
   const handleDeleteRoom = async () => {
     if (!confirm("Are you sure you want to delete this room?")) return;
-
     try {
       const res = await fetch(`${BASE}/rooms/${roomId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       const json = await res.json();
-
       if (!res.ok) throw new Error(json.message);
-
       alert("Room deleted");
-
       router.push(`/workspace/${vid}/rooms`);
     } catch (err: any) {
       alert(err.message);
@@ -132,7 +112,7 @@ export default function RoomPage() {
 
   return (
     <main style={{ background: "#f4f5f7", minHeight: "100vh" }}>
-      
+
       {/* HEADER */}
       <div
         style={{
@@ -145,22 +125,13 @@ export default function RoomPage() {
       >
         <Link
           href={`/workspace/${vid}/rooms`}
-          style={{
-            position: "absolute",
-            left: "20px",
-            top: "20px",
-            color: "#fff",
-            textDecoration: "none",
-          }}
+          style={{ position: "absolute", left: "20px", top: "20px", color: "#fff", textDecoration: "none" }}
         >
           ← Back
         </Link>
 
-        <h1 style={{ fontSize: "26px", fontWeight: 800 }}>
-          Book Room
-        </h1>
+        <h1 style={{ fontSize: "26px", fontWeight: 800 }}>Book Room</h1>
 
-        {/* 🗑 ADMIN DELETE BUTTON */}
         {isAdmin && (
           <button
             onClick={handleDeleteRoom}
@@ -181,18 +152,13 @@ export default function RoomPage() {
       </div>
 
       <div style={{ maxWidth: "900px", margin: "0 auto", padding: "24px" }}>
-        
+
         {/* DATE */}
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          style={{
-            width: "100%",
-            padding: "12px",
-            borderRadius: "10px",
-            border: "1px solid #ddd",
-          }}
+          style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ddd" }}
         />
 
         {error && <p style={{ color: "red" }}>{error}</p>}
@@ -201,9 +167,43 @@ export default function RoomPage() {
         {/* ROOM INFO */}
         {room && (
           <div style={{ marginTop: "20px" }}>
-            <h2 style={{ fontSize: "22px", fontWeight: 800 }}>
-              {room.name}
-            </h2>
+            {room.picture ? (
+              <div
+                style={{
+                  position: "relative",
+                  width: "100%",
+                  height: "220px",
+                  borderRadius: "16px",
+                  overflow: "hidden",
+                  marginBottom: "16px",
+                }}
+              >
+                <Image
+                  src={fixImageUrl(room.picture)}
+                  alt={room.name}
+                  fill
+                  style={{ objectFit: "cover" }}
+                />
+              </div>
+            ) : (
+              <div
+                style={{
+                  width: "100%",
+                  height: "160px",
+                  borderRadius: "16px",
+                  background: "linear-gradient(135deg, #0c4a6e 0%, #0891b2 100%)",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "48px",
+                  marginBottom: "16px",
+                }}
+              >
+                🏢
+              </div>
+            )}
+
+            <h2 style={{ fontSize: "22px", fontWeight: 800 }}>{room.name}</h2>
             <p>👥 {room.capacity} people</p>
           </div>
         )}
@@ -219,7 +219,6 @@ export default function RoomPage() {
         >
           {slots.map((slot) => {
             const isSelected = selected.includes(slot.timeSlotId);
-
             return (
               <div
                 key={slot.timeSlotId}
@@ -228,41 +227,19 @@ export default function RoomPage() {
                   padding: "12px",
                   borderRadius: "12px",
                   textAlign: "center",
-                  cursor:
-                    slot.status === "booked" ? "not-allowed" : "pointer",
+                  cursor: slot.status === "booked" ? "not-allowed" : "pointer",
                   background:
-                    slot.status === "booked"
-                      ? "#e5e7eb"
-                      : isSelected
-                      ? "#0891b2"
-                      : "#fff",
+                    slot.status === "booked" ? "#e5e7eb" : isSelected ? "#0891b2" : "#fff",
                   color:
-                    slot.status === "booked"
-                      ? "#9ca3af"
-                      : isSelected
-                      ? "#fff"
-                      : "#000",
+                    slot.status === "booked" ? "#9ca3af" : isSelected ? "#fff" : "#000",
                   border: "1px solid #ddd",
                   fontSize: "13px",
                 }}
               >
-                <div>
-                  {new Date(slot.startTime).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
-
-                <div>
-                  {new Date(slot.endTime).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </div>
-
-                <div style={{ fontSize: "11px" }}>
-                  ฿{slot.price}
-                </div>
+                {/* ✅ Thai 24-hour time */}
+                <div>{toThaiTime(slot.startTime)}</div>
+                <div>{toThaiTime(slot.endTime)}</div>
+                <div style={{ fontSize: "11px" }}>฿{slot.price}</div>
               </div>
             );
           })}
@@ -280,6 +257,7 @@ export default function RoomPage() {
             borderRadius: "12px",
             fontWeight: 800,
             border: "none",
+            cursor: "pointer",
           }}
         >
           Confirm Reservation
