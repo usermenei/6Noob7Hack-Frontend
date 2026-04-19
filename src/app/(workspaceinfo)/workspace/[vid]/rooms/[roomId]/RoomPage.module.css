@@ -1,0 +1,270 @@
+.main {
+  background-color: #f5f7fa;
+  min-height: 100vh;
+  padding-bottom: 60px;
+  font-family: 'Nunito', sans-serif;
+  color: #374151;
+}
+
+.header {
+  background-color: #ffffff;
+  padding: 16px 24px;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.backLink {
+  color: #4b5563;
+  text-decoration: none;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.2s;
+}
+
+.backLink:hover {
+  color: #0891b2;
+}
+
+.deleteBtn {
+  background-color: #fee2e2;
+  color: #ef4444;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.deleteBtn:hover {
+  background-color: #fca5a5;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 32px auto;
+  padding: 0 24px;
+  display: grid;
+  gap: 32px;
+  grid-template-columns: 1fr;
+  align-items: flex-start;
+}
+
+/* ถ้าจอใหญ่ (คอม) ให้แบ่งเป็น 2 ฝั่ง ซ้าย-ขวา */
+@media (min-width: 768px) {
+  .container {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.imageCard {
+  background: #ffffff;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.imageWrapper {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  background-color: #e5e7eb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+}
+
+.roomInfo {
+  padding: 24px;
+}
+
+.roomName {
+  font-size: 28px;
+  font-weight: 800;
+  color: #111827;
+  margin: 0 0 8px 0;
+}
+
+.capacity {
+  font-size: 16px;
+  color: #6b7280;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.bookingCard {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.sectionTitle {
+  font-size: 20px;
+  font-weight: 800;
+  color: #111827;
+  margin-top: 0;
+  margin-bottom: 16px;
+}
+
+.dateInput {
+  width: 100%;
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid #d1d5db;
+  font-size: 16px;
+  font-family: inherit;
+  color: #374151;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+
+.dateInput:focus {
+  border-color: #0891b2;
+}
+
+.slotGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.slot {
+  padding: 12px;
+  border-radius: 10px;
+  text-align: center;
+  border: 1.5px solid #e5e7eb;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.slotTime {
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.slotPrice {
+  font-size: 12px;
+}
+
+/* สถานะ: ว่าง (ปกติ) */
+.slotAvailable {
+  background-color: #ffffff;
+  color: #374151;
+}
+
+.slotAvailable:hover {
+  border-color: #0891b2;
+  color: #0891b2;
+}
+
+/* สถานะ: กำลังเลือก */
+.slotSelected {
+  background-color: #0891b2;
+  border-color: #0891b2;
+  color: #ffffff;
+}
+
+/* สถานะ: ถูกจองแล้ว */
+.slotBooked {
+  background-color: #f3f4f6;
+  border-color: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.bookBtn {
+  margin-top: 32px;
+  width: 100%;
+  padding: 16px;
+  background-color: #0891b2;
+  color: #ffffff;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 800;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.bookBtn:hover {
+  background-color: #0e7490;
+}
+
+.bookBtn:disabled {
+  background-color: #9ca3af;
+  cursor: not-allowed;
+}
+
+.message {
+  padding: 12px;
+  border-radius: 8px;
+  margin-top: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+}
+
+.error {
+  background-color: #fee2e2;
+  color: #b91c1c;
+}
+
+.success {
+  background-color: #d1fae5;
+  color: #047857;
+}
+
+.noSlots {
+  text-align: center;
+  color: #6b7280;
+  margin-top: 24px;
+  font-size: 15px;
+}
+
+/* เพิ่มต่อท้ายไฟล์ RoomPage.module.css */
+.datePickerContainer {
+  width: 100%;
+}
+
+.datePickerContainer :global(.react-datepicker-wrapper) {
+  width: 100%;
+  display: block;
+}
+
+.datePickerContainer :global(.react-datepicker__input-container) {
+  width: 100%;
+  display: block;
+}
+
+/* เพิ่มต่อท้ายไฟล์ RoomPage.module.css */
+.pricingNote {
+  margin-top: 20px;
+  padding: 12px 16px;
+  background-color: #f8fafc;
+  border-left: 4px solid #0891b2;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.pricingNote strong {
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+}

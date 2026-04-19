@@ -1,0 +1,402 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
+
+.main {
+  background-color: #f8fafc;
+  min-height: 100vh;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* --- Hero Section --- */
+.hero {
+  background: linear-gradient(135deg, #0891b2 0%, #08748fc3 100%);
+  padding: 60px 24px 80px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.heroDecor1 {
+  position: absolute;
+  top: -60px;
+  right: -40px;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.03);
+  pointer-events: none;
+}
+
+.heroDecor2 {
+  position: absolute;
+  bottom: -80px;
+  left: 30%;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.02);
+  pointer-events: none;
+}
+
+.heroContainer {
+  max-width: 1000px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #cbd5e1;
+  text-decoration: none;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(4px);
+  transition: all 0.2s;
+  margin-bottom: 32px;
+}
+
+.backLink:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+
+.heroTitle {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(32px, 5vw, 46px);
+  font-weight: 800;
+  margin: 0 0 12px;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+}
+
+.heroSubtitle {
+  font-size: 16px;
+  color: #94a3b8;
+  margin: 0 0 32px;
+  font-weight: 400;
+}
+
+.divider {
+  height: 4px;
+  background: linear-gradient(90deg, #38bdf8, #0ea5e9, #0284c7);
+}
+
+/* --- Content Section --- */
+.contentContainer {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 40px 16px 80px;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 80px 20px;
+  color: #64748b;
+  background: #fff;
+  border-radius: 20px;
+  border: 1px dashed #cbd5e1;
+}
+
+.emptyIcon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.emptyTitle {
+  font-size: 18px;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.emptyDesc {
+  font-size: 14px;
+  margin-top: 8px;
+}
+
+.roomList {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* --- Room Card --- */
+.roomCard {
+  display: flex;
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f1f5f9;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.roomCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+.imageWrap {
+  width: 280px;
+  min-width: 280px;
+  position: relative;
+  overflow: hidden;
+}
+
+.imageWrap img {
+  transition: transform 0.5s ease;
+}
+
+.roomCard:hover .imageWrap img {
+  transform: scale(1.05);
+}
+
+.fallbackImage {
+  width: 100%;
+  height: 100%;
+  min-height: 220px;
+  background: linear-gradient(135deg, rgb(8, 145, 178) 0%, #334155 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 48px;
+}
+
+.roomBadge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background: #35c5e9;
+  backdrop-filter: blur(8px);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 20px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.detailsWrap {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* --- Text & Badges --- */
+.statusWrap {
+  display: flex;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.availabilityDot {
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  margin-right: 8px;
+  box-shadow: 0 0 0 3px #0891b2;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 3px #0891b2; }
+  50% { box-shadow: 0 0 0 6px #0891b2; }
+}
+
+.statusText {
+  font-size: 13px;
+  color: #10b981;
+  font-weight: 600;
+}
+
+.roomName {
+  font-size: 22px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 8px;
+  font-family: 'Playfair Display', serif;
+}
+
+.roomDesc {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 20px;
+  line-height: 1.6;
+  max-width: 80%; /* เว้นที่ให้ปุ่ม admin มุมขวา */
+}
+
+.badgesRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: auto;
+}
+
+.capacityBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: #f1f5f9;
+  color: #475569;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.featureBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 20px;
+  background: #f0fdf4;
+  color: #16a34a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* --- Check Availability Button --- */
+.footerRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.checkBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 24px;
+  border-radius: 10px;
+  background: #0284c7;
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 14px;
+  transition: all 0.2s;
+  border: none;
+  width: 100%;
+}
+
+.checkBtn:hover {
+  background: #0369a1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(2, 132, 199, 0.2);
+}
+
+/* --- Price Column --- */
+.priceColumn {
+  width: 180px;
+  min-width: 180px;
+  border-left: 1px solid #f1f5f9;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  background: #f8fafc;
+}
+
+.priceLabel {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.priceTag {
+  font-family: 'Playfair Display', serif;
+  font-size: 32px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1;
+}
+
+.priceUnit {
+  font-size: 13px;
+  color: #64748b;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+.bestValue {
+  margin-top: 16px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: #dbeafe;
+  color: #1d4ed8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .roomCard {
+    flex-direction: column;
+  }
+  .imageWrap {
+    width: 100%;
+    height: 200px;
+  }
+  .priceColumn {
+    width: 100%;
+    border-left: none;
+    border-top: 1px solid #f1f5f9;
+    padding: 16px;
+  }
+  .adminActions {
+    top: 16px;
+    right: 16px;
+  }
+}
+
+/* --- Admin Actions Customization (แก้ไขแล้ว) --- */
+.adminActions {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 12px; /* เพิ่มช่องว่างระหว่างปุ่ม */
+  z-index: 10;
+}
+
+/* ตั้งค่าให้ปุ่มยาวขึ้น ไม่เบียด ตัวหนังสืออยู่ตรงกลาง และคงสีเดิมไว้ */
+.adminActions :global(button),
+.adminActions :global(a) {
+  padding: 8px 24px !important; /* ปรับให้ยาวขึ้น */
+  min-width: 90px !important; /* บังคับความกว้างขั้นต่ำ */
+  font-size: 14px !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  border: none !important; /* เอาเส้นขอบออก เพื่อให้สีชัดเจน */
+  color: #fff !important; /* ให้ตัวหนังสือเป็นสีขาวตัดกับปุ่ม */
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important; /* บังคับตัวหนังสืออยู่ตรงกลาง */
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1) !important;
+  transition: all 0.2s ease !important;
+  /* ❌ ลบ background transparent ทิ้งไป เพื่อดึงสีส้ม/แดง จาก Component */
+}
+
+/* เอฟเฟกต์ตอนชี้เมาส์ ให้ปุ่มลอยขึ้นนิดนึงและสว่างขึ้น */
+.adminActions :global(button:hover),
+.adminActions :global(a:hover) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15) !important;
+  filter: brightness(1.1); /* สว่างขึ้นแทนการเปลี่ยนสีทับ */
+}

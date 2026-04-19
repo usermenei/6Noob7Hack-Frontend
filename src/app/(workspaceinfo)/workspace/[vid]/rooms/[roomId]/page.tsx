@@ -5,10 +5,11 @@ import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import Image from "next/image";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import styles from "./RoomPage.module.css";
 
-const BASE =
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  "http://localhost:5000/api/v1";
+const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
 const fixImageUrl = (url: string) => {
   if (!url) return "";
@@ -18,7 +19,6 @@ const fixImageUrl = (url: string) => {
   return url;
 };
 
-// ✅ Thai time 24-hour
 const toThaiTime = (dateStr: string) => {
   const date = new Date(dateStr);
   date.setHours(date.getHours() - 7);
@@ -26,6 +26,13 @@ const toThaiTime = (dateStr: string) => {
     hour: "2-digit",
     minute: "2-digit",
   });
+};
+
+const formatDateForApi = (d: Date) => {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 };
 
 export default function RoomPage() {
@@ -36,7 +43,9 @@ export default function RoomPage() {
   const token = (session?.user as any)?.token;
   const isAdmin = (session?.user as any)?.role === "admin";
 
-  const [date, setDate] = useState("");
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [dateStr, setDateStr] = useState("");
+  
   const [room, setRoom] = useState<any>(null);
   const [slots, setSlots] = useState<any[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
@@ -44,11 +53,9 @@ export default function RoomPage() {
   const [success, setSuccess] = useState("");
 
   const fetchData = async () => {
-    if (!date) return;
+    if (!dateStr) return;
     try {
-      const res = await fetch(
-        `${BASE}/coworkingspaces/${vid}/rooms/${roomId}?date=${date}`
-      );
+      const res = await fetch(`${BASE}/coworkingspaces/${vid}/rooms/${roomId}?date=${dateStr}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.message);
       setRoom(json.data);
@@ -60,21 +67,36 @@ export default function RoomPage() {
   };
 
   useEffect(() => {
-    if (date) fetchData();
-  }, [date]);
+    if (dateStr) fetchData();
+  }, [dateStr]);
 
   const toggleSlot = (id: string, status: string) => {
     if (status === "booked") return;
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
-    );
+    
+    setSelected((prev) => {
+      // 1. ถ้ากดสล็อตเดิมที่เคยเลือกไว้แล้ว ให้เอาออกได้ตามปกติ
+      if (prev.includes(id)) {
+        return prev.filter((s) => s !== id);
+      } 
+      // 2. ถ้ากำลังจะเลือกสล็อตใหม่ ให้เช็คก่อนว่าตอนนี้เลือกไป 3 หรือยัง
+      else {
+        if (prev.length >= 3) {
+          // แจ้งเตือนลูกค้า (ใช้ setError เพื่อให้โชว์เป็นข้อความสีแดงๆ ใต้ปฏิทินก็ได้ครับ)
+          setError("You can only book up to 3 slots per reservation.");
+          return prev; // คืนค่าเดิมกลับไป (ไม่ให้เลือกเพิ่ม)
+        }
+        
+        setError(""); // เคลียร์ error ทิ้งถ้าเลือกได้ปกติ
+        return [...prev, id];
+      }
+    });
   };
 
   const handleReserve = async () => {
     setError("");
     setSuccess("");
-    if (!token) { setError("Please login first"); return; }
-    if (selected.length === 0) { setError("Select at least one time slot"); return; }
+    if (!token) { setError("Please login first to make a reservation."); return; }
+    if (selected.length === 0) { setError("Please select at least one time slot."); return; }
 
     try {
       const res = await fetch(`${BASE}/reservations`, {
@@ -87,15 +109,15 @@ export default function RoomPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message);
-      setSuccess("Booking successful 🎉");
-      fetchData();
+      setSuccess("Booking successful! 🎉");
+      fetchData(); 
     } catch (err: any) {
       setError(err.message);
     }
   };
 
   const handleDeleteRoom = async () => {
-    if (!confirm("Are you sure you want to delete this room?")) return;
+    if (!confirm("Are you sure you want to delete this room? This action cannot be undone.")) return;
     try {
       const res = await fetch(`${BASE}/rooms/${roomId}`, {
         method: "DELETE",
@@ -103,7 +125,7 @@ export default function RoomPage() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message);
-      alert("Room deleted");
+      alert("Room deleted successfully.");
       router.push(`/workspace/${vid}/rooms`);
     } catch (err: any) {
       alert(err.message);
@@ -111,157 +133,115 @@ export default function RoomPage() {
   };
 
   return (
-    <main style={{ background: "#f4f5f7", minHeight: "100vh" }}>
-
-      {/* HEADER */}
-      <div
-        style={{
-          background: "linear-gradient(135deg, #0c4a6e 0%, #0891b2 100%)",
-          padding: "30px",
-          color: "#fff",
-          textAlign: "center",
-          position: "relative",
-        }}
-      >
-        <Link
-          href={`/workspace/${vid}/rooms`}
-          style={{ position: "absolute", left: "20px", top: "20px", color: "#fff", textDecoration: "none" }}
-        >
-          ← Back
+    <main className={styles.main}>
+      <header className={styles.header}>
+        <Link href={`/workspace/${vid}/rooms`} className={styles.backLink}>
+          ← Back to Rooms
         </Link>
-
-        <h1 style={{ fontSize: "26px", fontWeight: 800 }}>Book Room</h1>
-
         {isAdmin && (
-          <button
-            onClick={handleDeleteRoom}
-            style={{
-              marginTop: "10px",
-              padding: "10px 14px",
-              borderRadius: "10px",
-              background: "#ef4444",
-              color: "#fff",
-              border: "none",
-              fontWeight: 700,
-              cursor: "pointer",
-            }}
-          >
-            🗑 Delete Room
+          <button onClick={handleDeleteRoom} className={styles.deleteBtn}>
+            Delete Room
           </button>
         )}
-      </div>
+      </header>
 
-      <div style={{ maxWidth: "900px", margin: "0 auto", padding: "24px" }}>
-
-        {/* DATE */}
-        <input
-          type="date"
-          value={date}
-          onChange={(e) => setDate(e.target.value)}
-          style={{ width: "100%", padding: "12px", borderRadius: "10px", border: "1px solid #ddd" }}
-        />
-
-        {error && <p style={{ color: "red" }}>{error}</p>}
-        {success && <p style={{ color: "green" }}>{success}</p>}
-
-        {/* ROOM INFO */}
-        {room && (
-          <div style={{ marginTop: "20px" }}>
-            {room.picture ? (
-              <div
-                style={{
-                  position: "relative",
-                  width: "100%",
-                  height: "220px",
-                  borderRadius: "16px",
-                  overflow: "hidden",
-                  marginBottom: "16px",
-                }}
-              >
-                <Image
-                  src={fixImageUrl(room.picture)}
-                  alt={room.name}
-                  fill
-                  style={{ objectFit: "cover" }}
-                />
-              </div>
+      <div className={styles.container}>
+        
+        {/* ฝั่งซ้าย: ข้อมูลห้อง */}
+        <div className={styles.imageCard}>
+          <div className={styles.imageWrapper}>
+            {room?.picture ? (
+              <Image
+                src={fixImageUrl(room.picture)}
+                alt={room.name || "Room Image"}
+                fill
+                style={{ objectFit: "cover" }}
+              />
             ) : (
-              <div
-                style={{
-                  width: "100%",
-                  height: "160px",
-                  borderRadius: "16px",
-                  background: "linear-gradient(135deg, #0c4a6e 0%, #0891b2 100%)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "48px",
-                  marginBottom: "16px",
-                }}
-              >
-                🏢
-              </div>
+              "🏢"
             )}
-
-            <h2 style={{ fontSize: "22px", fontWeight: 800 }}>{room.name}</h2>
-            <p>👥 {room.capacity} people</p>
           </div>
-        )}
-
-        {/* SLOTS */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
-            gap: "12px",
-            marginTop: "20px",
-          }}
-        >
-          {slots.map((slot) => {
-            const isSelected = selected.includes(slot.timeSlotId);
-            return (
-              <div
-                key={slot.timeSlotId}
-                onClick={() => toggleSlot(slot.timeSlotId, slot.status)}
-                style={{
-                  padding: "12px",
-                  borderRadius: "12px",
-                  textAlign: "center",
-                  cursor: slot.status === "booked" ? "not-allowed" : "pointer",
-                  background:
-                    slot.status === "booked" ? "#e5e7eb" : isSelected ? "#0891b2" : "#fff",
-                  color:
-                    slot.status === "booked" ? "#9ca3af" : isSelected ? "#fff" : "#000",
-                  border: "1px solid #ddd",
-                  fontSize: "13px",
-                }}
-              >
-                {/* ✅ Thai 24-hour time */}
-                <div>{toThaiTime(slot.startTime)}</div>
-                <div>{toThaiTime(slot.endTime)}</div>
-                <div style={{ fontSize: "11px" }}>฿{slot.price}</div>
-              </div>
-            );
-          })}
+          
+          <div className={styles.roomInfo}>
+            <h1 className={styles.roomName}>{room ? room.name : "Please select the date"}</h1>
+            {room && (
+              <p className={styles.capacity}>
+                👥 Capacity: {room.capacity} people
+              </p>
+            )}
+          </div>
         </div>
 
-        {/* BOOK BUTTON */}
-        <button
-          onClick={handleReserve}
-          style={{
-            marginTop: "24px",
-            width: "100%",
-            padding: "14px",
-            background: "#0891b2",
-            color: "#fff",
-            borderRadius: "12px",
-            fontWeight: 800,
-            border: "none",
-            cursor: "pointer",
-          }}
-        >
-          Confirm Reservation
-        </button>
+        {/* ฝั่งขวา: การจอง */}
+        <div className={styles.bookingCard}>
+          <h2 className={styles.sectionTitle}>Reserve a Space</h2>
+          
+          <div className={styles.datePickerContainer}>
+            <DatePicker
+              selected={selectedDate}
+              onChange={(date) => {
+                setSelectedDate(date);
+                if (date) {
+                  setDateStr(formatDateForApi(date));
+                } else {
+                  setDateStr("");
+                }
+                setError("");
+                setSuccess("");
+              }}
+              dateFormat="dd/MM/yyyy"
+              minDate={new Date()}
+              placeholderText="Select a booking date"
+              className={styles.dateInput}
+            />
+          </div>
+
+          {error && <div className={`${styles.message} ${styles.error}`}>{error}</div>}
+          {success && <div className={`${styles.message} ${styles.success}`}>{success}</div>}
+
+          {dateStr && slots.length === 0 && !error && (
+            <p className={styles.noSlots}>No available slots for this date.</p>
+          )}
+
+          {slots.length > 0 && (
+            <div className={styles.slotGrid}>
+              {slots.map((slot) => {
+                const isSelected = selected.includes(slot.timeSlotId);
+                let slotClass = styles.slotAvailable;
+                if (slot.status === "booked") slotClass = styles.slotBooked;
+                else if (isSelected) slotClass = styles.slotSelected;
+
+                return (
+                  <div
+                    key={slot.timeSlotId}
+                    onClick={() => toggleSlot(slot.timeSlotId, slot.status)}
+                    className={`${styles.slot} ${slotClass}`}
+                  >
+                    <span className={styles.slotTime}>
+                      {toThaiTime(slot.startTime)} - {toThaiTime(slot.endTime)}
+                    </span>
+                    <span className={styles.slotPrice}>฿{slot.price}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <button
+            onClick={handleReserve}
+            className={styles.bookBtn}
+            disabled={!dateStr || selected.length === 0}
+          >
+            {selected.length > 0 ? `Confirm Reservation (${selected.length} slots)` : "Select time slots to book"}
+          </button>
+
+          {/* ⭐️ เพิ่ม Business Description ตรงนี้ */}
+          <div className={styles.pricingNote}>
+            <strong>💡 Dynamic Pricing Notice</strong>
+            Prices are subject to change based on real-time demand. Higher rates may apply during peak business hours to ensure workspace availability.
+          </div>
+
+        </div>
       </div>
     </main>
   );
