@@ -11,8 +11,9 @@
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0f1117;
-    --foreground: #f0f0f0;
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 0, 0, 0;
+    --background-end-rgb: 0, 0, 0;
   }
 }
 
@@ -22,8 +23,8 @@ html, body {
 }
 
 body {
-  color: var(--foreground);
-  background: var(--background);
+  background-color: #ffffff; /* บังคับให้พื้นหลังเป็นสีขาว */
+  color: #111827; /* บังคับให้ตัวหนังสือหลักเป็นสีเทาเข้ม/ดำ */
   font-family: 'Nunito', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

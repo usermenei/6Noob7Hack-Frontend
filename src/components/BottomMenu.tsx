@@ -16,6 +16,9 @@ export default function BottomMenu() {
           <span className={styles.separator}>|</span>
           
           <Link href="/terms" className={styles.link}>Terms of Use</Link>
+          <span className={styles.separator}>|</span>
+          
+          <Link href="/agreements" className={styles.link}>User Agreement</Link>
           {/* <span className={styles.separator}>|</span> */}
 {/*           
           <Link href="/sales-and-refunds" className={styles.link}>Sales and Refunds</Link>

@@ -1,11 +1,15 @@
 .container {
   max-width: 800px;
-  margin: 60px auto; /* เว้นระยะจาก Top Menu */
+  margin: 60px auto;
   padding: 0 24px;
   font-family: 'Nunito', sans-serif;
-  color: #4b5563; /* สีข้อความเทาเข้ม อ่านสบายตา */
-  line-height: 1.7; /* ระยะห่างระหว่างบรรทัดให้โปร่งๆ */
+  color: #1c1e21; 
+  line-height: 1.7; 
   padding-bottom: 60px;
+  
+  /* ⭐️ เพิ่ม 2 บรรทัดนี้เข้าไปครับ */
+  background-color: #ffffff; 
+  min-height: 100vh; /* บังคับให้สีขาวยาวจนสุดขอบจอด้านล่าง */
 }
 
 .title {
