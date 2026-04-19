@@ -60,6 +60,8 @@ export default function EditModal({
         if (!res.ok) throw new Error(json.message);
 
         setSlots(json.data.slots || []);
+        console.log("RAW SLOTS:", JSON.stringify(json.data.slots?.[0]));
+        console.log("NOW:", new Date().toISOString());
         setSelected(originalSlotIds);
       } catch (err: any) {
         setError(err.message);
