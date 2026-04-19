@@ -7,7 +7,6 @@ const BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   "http://localhost:5000/api/v1";
 
-// 🟢 1. แก้เป็นบังคับแสดงผลเป็นเวลาไทยโดยไม่ต้องบวกลบเลขเอง
 const toThaiTime = (dateStr: string) => {
   const date = new Date(dateStr);
   return date.toLocaleTimeString("en-GB", {
@@ -17,10 +16,19 @@ const toThaiTime = (dateStr: string) => {
   });
 };
 
-// 🟢 2. เช็คเวลาอดีตแบบคลีนๆ เทียบกันตรงๆ ได้เลย
+const toDisplayTime = (dateStr: string) => {
+  const date = new Date(dateStr);
+  date.setHours(date.getHours() - 7);
+  return date.toLocaleTimeString("en-GB", {
+    timeZone: "UTC",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 const isSlotPast = (startTime: string) => {
   const slotDate = new Date(startTime);
-  const now = new Date(); // เวลาปัจจุบัน
+  const now = new Date();
   return slotDate < now;
 };
 
@@ -50,7 +58,6 @@ export default function EditModal({
     const fetchSlots = async () => {
       try {
         const firstSlot = reservation.timeSlots[0];
-        // ใช้เวลาจากคิวแรกมาหาวันที่เพื่อดึงข้อมูล API
         const date = new Date(firstSlot.startTime)
           .toISOString()
           .split("T")[0];
@@ -198,8 +205,8 @@ export default function EditModal({
                   opacity: isInteractable ? 1 : 0.4,
                 }}
               >
-                <div>{toThaiTime(slot.startTime)}</div>
-                <div>{toThaiTime(slot.endTime)}</div>
+                <div>{toDisplayTime(slot.startTime)}</div>
+                <div>{toDisplayTime(slot.endTime)}</div>
                 {isPast && (
                   <div style={{ fontSize: "11px", marginTop: "4px" }}>
                     Unavailable

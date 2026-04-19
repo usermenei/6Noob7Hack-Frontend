@@ -13,11 +13,20 @@ const formatImageUrl = (url?: string) => {
   return url;
 };
 
-// 🟢 แก้ไข: ใช้ timeZone จัดการเวลาแทนการลบ 7 ชั่วโมง
 const toThaiTime = (dateStr: string) => {
   const date = new Date(dateStr);
   return date.toLocaleTimeString("en-GB", {
     timeZone: "Asia/Bangkok",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const toDisplayTime = (dateStr: string) => {
+  const date = new Date(dateStr);
+  date.setHours(date.getHours() - 7);
+  return date.toLocaleTimeString("en-GB", {
+    timeZone: "UTC",
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -61,7 +70,6 @@ export default function ReservationCard({
 
   let dateStr = "-";
   if (isValid(startDateObj)) {
-    // 🟢 แก้ไข: บังคับวันที่ให้แสดงผลตรงตามเวลาประเทศไทยด้วย
     dateStr = startDateObj.toLocaleDateString("en-GB", {
       timeZone: "Asia/Bangkok", 
       day: "numeric",
@@ -72,7 +80,7 @@ export default function ReservationCard({
 
   let timeDisplay = "-";
   if (isValid(startDateObj) && isValid(endDateObj)) {
-    timeDisplay = `${toThaiTime(slots[0].startTime)} - ${toThaiTime(
+    timeDisplay = `${toDisplayTime(slots[0].startTime)} - ${toDisplayTime(
       slots[slots.length - 1].endTime
     )}`;
   }
@@ -156,8 +164,6 @@ export default function ReservationCard({
             Approve
           </button>
         )}
-
-        {/* ❌ CANCEL BUTTON REMOVED */}
 
         {(isAdmin ||
           r.status === "cancelled" ||
