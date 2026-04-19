@@ -21,8 +21,10 @@ const fixImageUrl = (url: string) => {
 
 const toThaiTime = (dateStr: string) => {
   const date = new Date(dateStr);
-  date.setHours(date.getHours() - 7);
+  
+  // บังคับให้แสดงผลเป็นเวลาประเทศไทย (GMT+7) เสมอ
   return date.toLocaleTimeString("en-GB", {
+    timeZone: "Asia/Bangkok", 
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -61,15 +63,16 @@ export default function RoomPage() {
       
       setRoom(json.data);
 
-      // 🟢 กรองไม่ให้โชว์ "สล็อตเวลาในอดีต" (กรณีที่ผู้ใช้เลือกวันปัจจุบัน)
-      const now = new Date();
+      const now = new Date(); // ดึงเวลาปัจจุบัน
+      
       const availableFutureSlots = (json.data.slots || []).filter((slot: any) => {
-        // ดึงเวลาเริ่มต้นของ slot นั้นๆ มาเช็ค
-        const slotStartTime = new Date(slot.startTime);
-        return slotStartTime > now; // เอาเฉพาะสล็อตที่เวลายังมาไม่ถึง
+        const slotStartTime = new Date(slot.startTime); // ดึงเวลาจาก API มาเป็น Date Object
+        
+        // เทียบกันตรงๆ ได้เลย เพราะระบบจะมองเป็นเวลามาตรฐานเดียวกันแล้ว
+        return slotStartTime > now; 
       });
 
-      setSlots(availableFutureSlots); // 👈 เซ็ตค่าเฉพาะสล็อตที่กรองแล้ว
+      setSlots(availableFutureSlots);
       setSelected([]);
     } catch (err: any) {
       setError(err.message);
