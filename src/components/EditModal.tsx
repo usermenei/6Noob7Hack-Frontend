@@ -7,35 +7,21 @@ const BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   "http://localhost:5000/api/v1";
 
+// 🟢 1. แก้เป็นบังคับแสดงผลเป็นเวลาไทยโดยไม่ต้องบวกลบเลขเอง
 const toThaiTime = (dateStr: string) => {
   const date = new Date(dateStr);
-  date.setHours(date.getHours() - 7);
   return date.toLocaleTimeString("en-GB", {
+    timeZone: "Asia/Bangkok",
     hour: "2-digit",
     minute: "2-digit",
   });
 };
 
-// Get current time in Thailand (UTC+7)
-const getNowInThailand = () => {
-  const now = new Date();
-  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
-  return new Date(utc + 7 * 3600000);
-};
-
+// 🟢 2. เช็คเวลาอดีตแบบคลีนๆ เทียบกันตรงๆ ได้เลย
 const isSlotPast = (startTime: string) => {
-  // Shift the slot time the same way toThaiTime does (-7 hours)
   const slotDate = new Date(startTime);
-  slotDate.setHours(slotDate.getHours() - 7);
-
-  // Compare against actual Thai time now
-  const thaiNow = getNowInThailand();
-
-  console.log("SLOT TIME (adjusted):", slotDate.toISOString());
-  console.log("THAI NOW:", thaiNow.toISOString());
-  console.log("IS PAST:", slotDate < thaiNow);
-
-  return slotDate < thaiNow;
+  const now = new Date(); // เวลาปัจจุบัน
+  return slotDate < now;
 };
 
 interface EditModalProps {
@@ -64,6 +50,7 @@ export default function EditModal({
     const fetchSlots = async () => {
       try {
         const firstSlot = reservation.timeSlots[0];
+        // ใช้เวลาจากคิวแรกมาหาวันที่เพื่อดึงข้อมูล API
         const date = new Date(firstSlot.startTime)
           .toISOString()
           .split("T")[0];
@@ -76,9 +63,6 @@ export default function EditModal({
         if (!res.ok) throw new Error(json.message);
 
         setSlots(json.data.slots || []);
-        console.log("RAW SLOTS:", JSON.stringify(json.data.slots?.[0]));
-        console.log("NOW:", new Date().toISOString());
-        console.log("THAI NOW:", getNowInThailand().toISOString());
         setSelected(originalSlotIds);
       } catch (err: any) {
         setError(err.message);

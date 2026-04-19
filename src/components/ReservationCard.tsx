@@ -13,11 +13,11 @@ const formatImageUrl = (url?: string) => {
   return url;
 };
 
-// -7 hours format
+// 🟢 แก้ไข: ใช้ timeZone จัดการเวลาแทนการลบ 7 ชั่วโมง
 const toThaiTime = (dateStr: string) => {
   const date = new Date(dateStr);
-  date.setHours(date.getHours() - 7);
   return date.toLocaleTimeString("en-GB", {
+    timeZone: "Asia/Bangkok",
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -61,7 +61,9 @@ export default function ReservationCard({
 
   let dateStr = "-";
   if (isValid(startDateObj)) {
+    // 🟢 แก้ไข: บังคับวันที่ให้แสดงผลตรงตามเวลาประเทศไทยด้วย
     dateStr = startDateObj.toLocaleDateString("en-GB", {
+      timeZone: "Asia/Bangkok", 
       day: "numeric",
       month: "short",
       year: "numeric",
