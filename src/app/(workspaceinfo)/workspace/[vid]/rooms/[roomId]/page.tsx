@@ -58,8 +58,18 @@ export default function RoomPage() {
       const res = await fetch(`${BASE}/coworkingspaces/${vid}/rooms/${roomId}?date=${dateStr}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.message);
+      
       setRoom(json.data);
-      setSlots(json.data.slots || []);
+
+      // 🟢 กรองไม่ให้โชว์ "สล็อตเวลาในอดีต" (กรณีที่ผู้ใช้เลือกวันปัจจุบัน)
+      const now = new Date();
+      const availableFutureSlots = (json.data.slots || []).filter((slot: any) => {
+        // ดึงเวลาเริ่มต้นของ slot นั้นๆ มาเช็ค
+        const slotStartTime = new Date(slot.startTime);
+        return slotStartTime > now; // เอาเฉพาะสล็อตที่เวลายังมาไม่ถึง
+      });
+
+      setSlots(availableFutureSlots); // 👈 เซ็ตค่าเฉพาะสล็อตที่กรองแล้ว
       setSelected([]);
     } catch (err: any) {
       setError(err.message);
