@@ -7,7 +7,6 @@ const BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL ||
   "http://localhost:5000/api/v1";
 
-// ✅ -7 hours, 24-hour format
 const toThaiTime = (dateStr: string) => {
   const date = new Date(dateStr);
   date.setHours(date.getHours() - 7);
@@ -17,7 +16,6 @@ const toThaiTime = (dateStr: string) => {
   });
 };
 
-// ✅ props interface
 interface EditModalProps {
   reservation: Reservation;
   token: string;
@@ -67,7 +65,10 @@ export default function EditModal({
 
   const toggleSlot = (id: string) => {
     const isOriginal = originalSlotIds.includes(id);
-    if (!isOriginal) return;
+    const slot = slots.find((s) => s.timeSlotId === id);
+    const isPast = slot ? new Date(slot.startTime) < new Date() : false;
+
+    if (!isOriginal || isPast) return;
     setSelected((prev) => prev.filter((s) => s !== id));
   };
 
@@ -155,7 +156,6 @@ export default function EditModal({
 
         {error && <p style={{ color: "red" }}>{error}</p>}
 
-        {/* SLOT GRID */}
         <div
           style={{
             display: "grid",
@@ -167,6 +167,8 @@ export default function EditModal({
           {slots.map((slot) => {
             const isSelected = selected.includes(slot.timeSlotId);
             const isOriginal = originalSlotIds.includes(slot.timeSlotId);
+            const isPast = new Date(slot.startTime) < new Date();
+            const isInteractable = isOriginal && !isPast;
 
             return (
               <div
@@ -177,20 +179,28 @@ export default function EditModal({
                   borderRadius: "10px",
                   textAlign: "center",
                   border: "1px solid #ddd",
-                  background: isSelected ? "#0891b2" : "#e5e7eb",
-                  color: isSelected ? "#fff" : "#999",
-                  cursor: isOriginal ? "pointer" : "not-allowed",
-                  opacity: isOriginal ? 1 : 0.4,
+                  background: isPast
+                    ? "#f3f4f6"
+                    : isSelected
+                    ? "#0891b2"
+                    : "#e5e7eb",
+                  color: isPast ? "#9ca3af" : isSelected ? "#fff" : "#999",
+                  cursor: isInteractable ? "pointer" : "not-allowed",
+                  opacity: isInteractable ? 1 : 0.4,
                 }}
               >
                 <div>{toThaiTime(slot.startTime)}</div>
                 <div>{toThaiTime(slot.endTime)}</div>
+                {isPast && (
+                  <div style={{ fontSize: "11px", marginTop: "4px" }}>
+                    Unavailable
+                  </div>
+                )}
               </div>
             );
           })}
         </div>
 
-        {/* BUTTONS */}
         <div
           style={{
             marginTop: "20px",
