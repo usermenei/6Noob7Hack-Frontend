@@ -23,7 +23,17 @@ const toThaiTime = (dateStr: string) => {
   const date = new Date(dateStr);
   
   return date.toLocaleTimeString("en-GB", {
-    timeZone: "UTC",  // Display raw UTC time since DB stores times as UTC+7 already
+    timeZone: "UTC",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
+const toDisplayTime = (dateStr: string) => {
+  const date = new Date(dateStr);
+  date.setHours(date.getHours() - 7);
+  return date.toLocaleTimeString("en-GB", {
+    timeZone: "UTC",
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -62,12 +72,10 @@ export default function RoomPage() {
       
       setRoom(json.data);
 
-      const now = new Date(); // ดึงเวลาปัจจุบัน
+      const now = new Date();
       
       const availableFutureSlots = (json.data.slots || []).filter((slot: any) => {
-        const slotStartTime = new Date(slot.startTime); // ดึงเวลาจาก API มาเป็น Date Object
-        
-        // เทียบกันตรงๆ ได้เลย เพราะระบบจะมองเป็นเวลามาตรฐานเดียวกันแล้ว
+        const slotStartTime = new Date(slot.startTime);
         return slotStartTime > now; 
       });
 
@@ -86,19 +94,14 @@ export default function RoomPage() {
     if (status === "booked") return;
     
     setSelected((prev) => {
-      // 1. ถ้ากดสล็อตเดิมที่เคยเลือกไว้แล้ว ให้เอาออกได้ตามปกติ
       if (prev.includes(id)) {
         return prev.filter((s) => s !== id);
-      } 
-      // 2. ถ้ากำลังจะเลือกสล็อตใหม่ ให้เช็คก่อนว่าตอนนี้เลือกไป 3 หรือยัง
-      else {
+      } else {
         if (prev.length >= 3) {
-          // แจ้งเตือนลูกค้า (ใช้ setError เพื่อให้โชว์เป็นข้อความสีแดงๆ ใต้ปฏิทินก็ได้ครับ)
           setError("You can only book up to 3 slots per reservation.");
-          return prev; // คืนค่าเดิมกลับไป (ไม่ให้เลือกเพิ่ม)
+          return prev;
         }
-        
-        setError(""); // เคลียร์ error ทิ้งถ้าเลือกได้ปกติ
+        setError("");
         return [...prev, id];
       }
     });
@@ -230,7 +233,7 @@ export default function RoomPage() {
                     className={`${styles.slot} ${slotClass}`}
                   >
                     <span className={styles.slotTime}>
-                      {toThaiTime(slot.startTime)} - {toThaiTime(slot.endTime)}
+                      {toDisplayTime(slot.startTime)} - {toDisplayTime(slot.endTime)}
                     </span>
                     <span className={styles.slotPrice}>฿{slot.price}</span>
                   </div>
@@ -247,7 +250,6 @@ export default function RoomPage() {
             {selected.length > 0 ? `Confirm Reservation (${selected.length} slots)` : "Select time slots to book"}
           </button>
 
-          {/* ⭐️ เพิ่ม Business Description ตรงนี้ */}
           <div className={styles.pricingNote}>
             <strong>💡 Dynamic Pricing Notice</strong>
             Prices are subject to change based on real-time demand. Higher rates may apply during peak business hours to ensure workspace availability.
