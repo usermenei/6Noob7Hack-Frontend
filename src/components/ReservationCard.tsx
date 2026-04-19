@@ -24,7 +24,7 @@ const toThaiTime = (dateStr: string) => {
 
 const toDisplayTime = (dateStr: string) => {
   const date = new Date(dateStr);
-  date.setHours(date.getHours() - 7);
+  date.setHours(date.getHours());
   return date.toLocaleTimeString("en-GB", {
     timeZone: "UTC",
     hour: "2-digit",

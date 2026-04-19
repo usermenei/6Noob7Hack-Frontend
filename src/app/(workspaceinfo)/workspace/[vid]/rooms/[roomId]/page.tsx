@@ -75,9 +75,10 @@ export default function RoomPage() {
       const now = new Date();
       
       const availableFutureSlots = (json.data.slots || []).filter((slot: any) => {
-        const slotStartTime = new Date(slot.startTime);
-        return slotStartTime > now; 
-      });
+  const slotStartTime = new Date(slot.startTime);
+  const nowPlus7 = new Date(now.getTime() + 7 * 60 * 60 * 1000);
+  return slotStartTime > nowPlus7;
+});
 
       setSlots(availableFutureSlots);
       setSelected([]);
