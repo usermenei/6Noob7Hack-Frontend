@@ -22,9 +22,8 @@ const fixImageUrl = (url: string) => {
 const toThaiTime = (dateStr: string) => {
   const date = new Date(dateStr);
   
-  // บังคับให้แสดงผลเป็นเวลาประเทศไทย (GMT+7) เสมอ
   return date.toLocaleTimeString("en-GB", {
-    timeZone: "Asia/Bangkok", 
+    timeZone: "UTC",  // Display raw UTC time since DB stores times as UTC+7 already
     hour: "2-digit",
     minute: "2-digit",
   });
