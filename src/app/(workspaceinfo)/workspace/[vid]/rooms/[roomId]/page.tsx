@@ -179,7 +179,7 @@ export default function RoomPage() {
           <div className={styles.datePickerContainer}>
             <DatePicker
               selected={selectedDate}
-              onChange={(date) => {
+              onChange={(date: Date | null) => {
                 setSelectedDate(date);
                 if (date) {
                   setDateStr(formatDateForApi(date));
