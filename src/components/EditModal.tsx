@@ -16,6 +16,12 @@ const toThaiTime = (dateStr: string) => {
   });
 };
 
+const isSlotPast = (startTime: string) => {
+  const slotDate = new Date(startTime);
+  slotDate.setHours(slotDate.getHours() - 7);
+  return slotDate < new Date();
+};
+
 interface EditModalProps {
   reservation: Reservation;
   token: string;
@@ -66,7 +72,7 @@ export default function EditModal({
   const toggleSlot = (id: string) => {
     const isOriginal = originalSlotIds.includes(id);
     const slot = slots.find((s) => s.timeSlotId === id);
-    const isPast = slot ? new Date(slot.startTime) < new Date() : false;
+    const isPast = slot ? isSlotPast(slot.startTime) : false;
 
     if (!isOriginal || isPast) return;
     setSelected((prev) => prev.filter((s) => s !== id));
@@ -167,7 +173,7 @@ export default function EditModal({
           {slots.map((slot) => {
             const isSelected = selected.includes(slot.timeSlotId);
             const isOriginal = originalSlotIds.includes(slot.timeSlotId);
-            const isPast = new Date(slot.startTime) < new Date();
+            const isPast = isSlotPast(slot.startTime);
             const isInteractable = isOriginal && !isPast;
 
             return (
