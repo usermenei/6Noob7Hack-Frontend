@@ -16,10 +16,26 @@ const toThaiTime = (dateStr: string) => {
   });
 };
 
+// Get current time in Thailand (UTC+7)
+const getNowInThailand = () => {
+  const now = new Date();
+  const utc = now.getTime() + now.getTimezoneOffset() * 60000;
+  return new Date(utc + 7 * 3600000);
+};
+
 const isSlotPast = (startTime: string) => {
+  // Shift the slot time the same way toThaiTime does (-7 hours)
   const slotDate = new Date(startTime);
   slotDate.setHours(slotDate.getHours() - 7);
-  return slotDate < new Date();
+
+  // Compare against actual Thai time now
+  const thaiNow = getNowInThailand();
+
+  console.log("SLOT TIME (adjusted):", slotDate.toISOString());
+  console.log("THAI NOW:", thaiNow.toISOString());
+  console.log("IS PAST:", slotDate < thaiNow);
+
+  return slotDate < thaiNow;
 };
 
 interface EditModalProps {
@@ -62,6 +78,7 @@ export default function EditModal({
         setSlots(json.data.slots || []);
         console.log("RAW SLOTS:", JSON.stringify(json.data.slots?.[0]));
         console.log("NOW:", new Date().toISOString());
+        console.log("THAI NOW:", getNowInThailand().toISOString());
         setSelected(originalSlotIds);
       } catch (err: any) {
         setError(err.message);
