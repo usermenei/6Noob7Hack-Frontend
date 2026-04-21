@@ -8,6 +8,7 @@ import Image from "next/image";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import styles from "./RoomPage.module.css";
+import PaymentView from "@/components/PaymentView"; 
 
 const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
@@ -19,24 +20,9 @@ const fixImageUrl = (url: string) => {
   return url;
 };
 
-const toThaiTime = (dateStr: string) => {
-  const date = new Date(dateStr);
-  
-  return date.toLocaleTimeString("en-GB", {
-    timeZone: "UTC",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
 const toDisplayTime = (dateStr: string) => {
   const date = new Date(dateStr);
-  date.setHours(date.getHours());
-  return date.toLocaleTimeString("en-GB", {
-    timeZone: "UTC",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return date.toLocaleTimeString("en-GB", { timeZone: "UTC", hour: "2-digit", minute: "2-digit" });
 };
 
 const formatDateForApi = (d: Date) => {
@@ -49,19 +35,21 @@ const formatDateForApi = (d: Date) => {
 export default function RoomPage() {
   const { vid, roomId } = useParams();
   const router = useRouter();
-
   const { data: session } = useSession();
   const token = (session?.user as any)?.token;
   const isAdmin = (session?.user as any)?.role === "admin";
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [dateStr, setDateStr] = useState("");
-  
   const [room, setRoom] = useState<any>(null);
   const [slots, setSlots] = useState<any[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  
+  // Payment States
+  const [showPayment, setShowPayment] = useState(false);
+  const [reservationId, setReservationId] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const fetchData = async () => {
     if (!dateStr) return;
@@ -69,18 +57,8 @@ export default function RoomPage() {
       const res = await fetch(`${BASE}/coworkingspaces/${vid}/rooms/${roomId}?date=${dateStr}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.message);
-      
       setRoom(json.data);
-
-      const now = new Date();
-      
-      const availableFutureSlots = (json.data.slots || []).filter((slot: any) => {
-  const slotStartTime = new Date(slot.startTime);
-  const nowPlus7 = new Date(now.getTime() + 7 * 60 * 60 * 1000);
-  return slotStartTime > nowPlus7;
-});
-
-      setSlots(availableFutureSlots);
+      setSlots(json.data.slots || []);
       setSelected([]);
     } catch (err: any) {
       setError(err.message);
@@ -93,169 +71,115 @@ export default function RoomPage() {
 
   const toggleSlot = (id: string, status: string) => {
     if (status === "booked") return;
-    
     setSelected((prev) => {
-      if (prev.includes(id)) {
-        return prev.filter((s) => s !== id);
-      } else {
-        if (prev.length >= 3) {
-          setError("You can only book up to 3 slots per reservation.");
-          return prev;
-        }
-        setError("");
-        return [...prev, id];
+      if (prev.includes(id)) return prev.filter((s) => s !== id);
+      if (prev.length >= 3) {
+        setError("You can only book up to 3 slots.");
+        return prev;
       }
+      return [...prev, id];
     });
   };
 
-  const handleReserve = async () => {
-    setError("");
-    setSuccess("");
-    if (!token) { setError("Please login first to make a reservation."); return; }
-    if (selected.length === 0) { setError("Please select at least one time slot."); return; }
+  const totalPrice = selected.reduce((total, slotId) => {
+    const foundSlot = slots.find((s) => s.timeSlotId === slotId);
+    return total + (foundSlot ? foundSlot.price : 0);
+  }, 0);
 
+  // 🌟 สร้าง Reservation ก่อนตาม US2-1
+  const handleProceedToPayment = async () => {
+    if (!token) { setError("Please login first."); return; }
+    if (selected.length === 0) return;
+    
+    setIsSubmitting(true);
+    setError("");
     try {
       const res = await fetch(`${BASE}/reservations`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify({ timeSlotIds: selected }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.message);
-      setSuccess("Booking successful! 🎉");
-      fetchData(); 
+      if (!res.ok) throw new Error(json.message || "Reservation failed");
+
+      setReservationId(json.data?._id || json.data?.id);
+      setShowPayment(true);
     } catch (err: any) {
       setError(err.message);
-    }
-  };
-
-  const handleDeleteRoom = async () => {
-    if (!confirm("Are you sure you want to delete this room? This action cannot be undone.")) return;
-    try {
-      const res = await fetch(`${BASE}/rooms/${roomId}`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.message);
-      alert("Room deleted successfully.");
-      router.push(`/workspace/${vid}/rooms`);
-    } catch (err: any) {
-      alert(err.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <main className={styles.main}>
       <header className={styles.header}>
-        <Link href={`/workspace/${vid}/rooms`} className={styles.backLink}>
-          ← Back to Rooms
-        </Link>
-        {isAdmin && (
-          <button onClick={handleDeleteRoom} className={styles.deleteBtn}>
-            Delete Room
-          </button>
-        )}
+        <Link href={`/workspace/${vid}/rooms`} className={styles.backLink}>← Back to Rooms</Link>
       </header>
 
       <div className={styles.container}>
-        
-        {/* ฝั่งซ้าย: ข้อมูลห้อง */}
         <div className={styles.imageCard}>
           <div className={styles.imageWrapper}>
-            {room?.picture ? (
-              <Image
-                src={fixImageUrl(room.picture)}
-                alt={room.name || "Room Image"}
-                fill
-                style={{ objectFit: "cover" }}
-              />
-            ) : (
-              "🏢"
-            )}
+            {room?.picture ? <Image src={fixImageUrl(room.picture)} alt="Room" fill style={{ objectFit: "cover" }} /> : "🏢"}
           </div>
-          
           <div className={styles.roomInfo}>
-            <h1 className={styles.roomName}>{room ? room.name : "Please select the date"}</h1>
-            {room && (
-              <p className={styles.capacity}>
-                👥 Capacity: {room.capacity} people
-              </p>
-            )}
+            <h1 className={styles.roomName}>{room?.name || "Room Details"}</h1>
+            <p>👥 Capacity: {room?.capacity || 0} people</p>
           </div>
         </div>
 
-        {/* ฝั่งขวา: การจอง */}
         <div className={styles.bookingCard}>
-          <h2 className={styles.sectionTitle}>Reserve a Space</h2>
-          
-          <div className={styles.datePickerContainer}>
-            <DatePicker
-              selected={selectedDate}
-              onChange={(date: Date | null) => {
-                setSelectedDate(date);
-                if (date) {
-                  setDateStr(formatDateForApi(date));
-                } else {
-                  setDateStr("");
-                }
-                setError("");
-                setSuccess("");
-              }}
-              dateFormat="dd/MM/yyyy"
-              minDate={new Date()}
-              placeholderText="Select a booking date"
-              className={styles.dateInput}
+          {showPayment && reservationId ? (
+            <PaymentView 
+              reservationId={reservationId}
+              token={token} 
+              totalPrice={totalPrice} 
+              onPaymentSuccess={() => router.push("/mybooking")} 
+              onBack={() => setShowPayment(false)}
             />
-          </div>
+          ) : (
+            <>
+              <h2 className={styles.sectionTitle}>Reserve a Space</h2>
+              <DatePicker
+                selected={selectedDate}
+                onChange={(date) => { setSelectedDate(date); setDateStr(date ? formatDateForApi(date) : ""); }}
+                dateFormat="dd/MM/yyyy"
+                minDate={new Date()}
+                className={styles.dateInput}
+              />
+              
+              {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
 
-          {error && <div className={`${styles.message} ${styles.error}`}>{error}</div>}
-          {success && <div className={`${styles.message} ${styles.success}`}>{success}</div>}
-
-          {dateStr && slots.length === 0 && !error && (
-            <p className={styles.noSlots}>No available slots for this date.</p>
-          )}
-
-          {slots.length > 0 && (
-            <div className={styles.slotGrid}>
-              {slots.map((slot) => {
-                const isSelected = selected.includes(slot.timeSlotId);
-                let slotClass = styles.slotAvailable;
-                if (slot.status === "booked") slotClass = styles.slotBooked;
-                else if (isSelected) slotClass = styles.slotSelected;
-
-                return (
-                  <div
-                    key={slot.timeSlotId}
+              <div className={styles.slotGrid} style={{ marginTop: '20px' }}>
+                {slots.map((slot) => (
+                  <div 
+                    key={slot.timeSlotId} 
                     onClick={() => toggleSlot(slot.timeSlotId, slot.status)}
-                    className={`${styles.slot} ${slotClass}`}
+                    className={`${styles.slot} ${selected.includes(slot.timeSlotId) ? styles.slotSelected : (slot.status === 'booked' ? styles.slotBooked : styles.slotAvailable)}`}
                   >
-                    <span className={styles.slotTime}>
-                      {toDisplayTime(slot.startTime)} - {toDisplayTime(slot.endTime)}
-                    </span>
-                    <span className={styles.slotPrice}>฿{slot.price}</span>
+                    <span>{toDisplayTime(slot.startTime)} - {toDisplayTime(slot.endTime)}</span>
+                    <span style={{ fontWeight: 'bold' }}>฿{slot.price}</span>
                   </div>
-                );
-              })}
-            </div>
+                ))}
+              </div>
+
+              {selected.length > 0 && (
+                <div style={{ margin: '20px 0', padding: '15px', background: '#f8fafc', borderRadius: '10px', display: 'flex', justifyContent: 'space-between' }}>
+                  <strong>Total Price:</strong>
+                  <strong style={{ fontSize: '1.2rem' }}>฿{totalPrice}</strong>
+                </div>
+              )}
+
+              <button 
+                onClick={handleProceedToPayment} 
+                disabled={isSubmitting || selected.length === 0}
+                className={styles.bookBtn}
+                style={{ width: '100%', padding: '15px', background: '#0891b2', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+              >
+                {isSubmitting ? "Creating Reservation..." : `Confirm Reservation (${selected.length} slots)`}
+              </button>
+            </>
           )}
-
-          <button
-            onClick={handleReserve}
-            className={styles.bookBtn}
-            disabled={!dateStr || selected.length === 0}
-          >
-            {selected.length > 0 ? `Confirm Reservation (${selected.length} slots)` : "Select time slots to book"}
-          </button>
-
-          <div className={styles.pricingNote}>
-            <strong>💡 Dynamic Pricing Notice</strong>
-            Prices are subject to change based on real-time demand. Higher rates may apply during peak business hours to ensure workspace availability.
-          </div>
-
         </div>
       </div>
     </main>
