@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+// นำเข้าฟังก์ชันจากไฟล์ libs ที่เราแยกไว้
+import { createPayment, generateQrCode, simulateConfirmPayment } from "@/libs/payment";
 
 interface PaymentViewProps {
   reservationId: string;
@@ -21,6 +23,9 @@ export default function PaymentView({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  
+  const [paymentId, setPaymentId] = useState<string | null>(null);
+  const [qrImage, setQrImage] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState("");
 
   const handleConfirmPayment = async () => {
@@ -29,36 +34,39 @@ export default function PaymentView({
     setSuccess("");
     
     try {
-      const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
-      
-      // 🌟 ยิง API /payments ตาม US2-1
-      const res = await fetch(`${BASE}/payments`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ 
-          reservationId: reservationId, 
-          method: paymentMethod,
-          amount: totalPrice 
-        }),
-      });
-
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.message || "Payment failed");
-
-      // 🌟 ดึง Transaction ID มาแสดงผล
-      setTransactionId(json.data?.transaction_id || json.data?._id || "TXN-" + Math.random().toString(36).substr(2, 9).toUpperCase());
+      // 1. สร้าง Payment ผ่าน libs
+      const paymentData = await createPayment(reservationId, paymentMethod, token);
+      const newPaymentId = paymentData.paymentId;
+      setPaymentId(newPaymentId);
 
       if (paymentMethod === "cash") {
         setSuccess("Reservation status: Pending. Please pay at the counter. 💵");
+        setTimeout(() => onPaymentSuccess(), 3000);
       } else {
-        setSuccess("Payment successful! Your booking is confirmed. 🎉");
+        // 2. ถ้าเป็น QR ขอรูป QR Code ผ่าน libs
+        const qrData = await generateQrCode(newPaymentId, token);
+        setQrImage(qrData.qrImage);
+        setSuccess("Please scan the QR Code below to complete your payment. 📱");
       }
       
-      setTimeout(() => onPaymentSuccess(), 3000);
     } catch (err: any) {
-      setError(err.message);
+      setError(err.message || "Something went wrong.");
     } finally {
       setIsProcessing(false);
+    }
+  };
+
+  const handleSimulatePaymentComplete = async () => {
+    if (!paymentId) return;
+    try {
+      // 3. จำลองการจ่ายสำเร็จผ่าน libs
+      const confirmData = await simulateConfirmPayment(paymentId, token);
+      setTransactionId(confirmData.transactionId);
+      setQrImage(null); // ซ่อน QR 
+      setSuccess("Payment successful! Your booking is confirmed. 🎉");
+      setTimeout(() => onPaymentSuccess(), 3000);
+    } catch (err) {
+      console.error("Simulation failed", err);
     }
   };
 
@@ -70,12 +78,12 @@ export default function PaymentView({
 
       <h2 style={{ fontSize: "1.4rem", fontWeight: "bold", marginBottom: "15px" }}>Checkout</h2>
 
-      {/* UI Notification Messages */}
       {error && <div style={{ padding: "12px", background: "#fef2f2", color: "#b91c1c", borderRadius: "8px", marginBottom: "15px", border: "1px solid #fecaca" }}>❌ {error}</div>}
+      
       {success && (
         <div style={{ padding: "12px", background: "#f0fdf4", color: "#166534", borderRadius: "8px", marginBottom: "15px", border: "1px solid #bbf7d0" }}>
           <strong>✅ {success}</strong>
-          <p style={{ fontSize: "0.8rem", marginTop: "5px" }}>Transaction ID: {transactionId}</p>
+          {transactionId && <p style={{ fontSize: "0.8rem", marginTop: "5px" }}>Transaction ID: {transactionId}</p>}
         </div>
       )}
 
@@ -84,34 +92,38 @@ export default function PaymentView({
         <h1 style={{ fontSize: "2.2rem", color: "#0c4a6e", margin: "5px 0" }}>฿{totalPrice.toLocaleString()}</h1>
       </div>
 
-      <div style={{ marginBottom: "20px" }}>
-        <p style={{ fontWeight: "bold", marginBottom: "10px", fontSize: "0.9rem" }}>Payment Method</p>
-        <div style={{ display: "flex", gap: "10px" }}>
-          <button onClick={() => setPaymentMethod("qr")} style={{ flex: 1, padding: "12px", borderRadius: "8px", border: paymentMethod === "qr" ? "2px solid #0891b2" : "1px solid #cbd5e1", background: paymentMethod === "qr" ? "#ecfeff" : "white", cursor: "pointer" }}>📱 PromptPay</button>
-          <button onClick={() => setPaymentMethod("cash")} style={{ flex: 1, padding: "12px", borderRadius: "8px", border: paymentMethod === "cash" ? "2px solid #0891b2" : "1px solid #cbd5e1", background: paymentMethod === "cash" ? "#ecfeff" : "white", cursor: "pointer" }}>💵 Cash</button>
-        </div>
-      </div>
-
-      {paymentMethod === "qr" && !success && (
-        <div style={{ textAlign: "center", padding: "15px", border: "1px dashed #cbd5e1", borderRadius: "10px", marginBottom: "20px" }}>
-          <div style={{ width: "140px", height: "140px", background: "#f1f5f9", margin: "0 auto 10px", display: "flex", alignItems: "center", justifyContent: "center", color: "#64748b" }}>[ QR Code ]</div>
-          <p style={{ fontSize: "0.75rem", color: "#64748b" }}>Scan and pay via your Banking App</p>
-        </div>
+      {!paymentId && (
+        <>
+          <div style={{ marginBottom: "20px" }}>
+            <p style={{ fontWeight: "bold", marginBottom: "10px", fontSize: "0.9rem" }}>Payment Method</p>
+            <div style={{ display: "flex", gap: "10px" }}>
+              <button onClick={() => setPaymentMethod("qr")} style={{ flex: 1, padding: "12px", borderRadius: "8px", border: paymentMethod === "qr" ? "2px solid #0891b2" : "1px solid #cbd5e1", background: paymentMethod === "qr" ? "#ecfeff" : "white", cursor: "pointer" }}>📱 PromptPay QR</button>
+              <button onClick={() => setPaymentMethod("cash")} style={{ flex: 1, padding: "12px", borderRadius: "8px", border: paymentMethod === "cash" ? "2px solid #0891b2" : "1px solid #cbd5e1", background: paymentMethod === "cash" ? "#ecfeff" : "white", cursor: "pointer" }}>💵 Pay Cash</button>
+            </div>
+          </div>
+          <button
+            onClick={handleConfirmPayment}
+            disabled={isProcessing}
+            style={{ width: "100%", padding: "16px", background: "#0891b2", color: "white", border: "none", borderRadius: "10px", fontWeight: "bold", fontSize: "1rem", cursor: "pointer", opacity: isProcessing ? 0.7 : 1 }}
+          >
+            {isProcessing ? "Processing..." : `Confirm & Generate ${paymentMethod === 'cash' ? 'Booking' : 'QR'}`}
+          </button>
+        </>
       )}
 
-      {paymentMethod === "cash" && !success && (
-        <div style={{ padding: "12px", background: "#fffbeb", color: "#92400e", borderRadius: "8px", marginBottom: "20px", fontSize: "0.85rem", border: "1px solid #fef3c7" }}>
-          ℹ️ Your reservation will be held. Please pay at the front desk when you arrive.
+      {qrImage && (
+        <div style={{ textAlign: "center", padding: "20px", border: "1px dashed #cbd5e1", borderRadius: "10px", marginBottom: "20px" }}>
+          <img src={qrImage} alt="PromptPay QR Code" style={{ width: "200px", height: "200px", margin: "0 auto", display: "block" }} />
+          <p style={{ fontSize: "0.85rem", color: "#64748b", marginTop: "10px" }}>Scan and pay via your Banking App</p>
+          
+          <button 
+            onClick={handleSimulatePaymentComplete}
+            style={{ marginTop: "15px", padding: "8px 16px", background: "#10b981", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.85rem" }}
+          >
+            [Test] Simulate Payment Success
+          </button>
         </div>
       )}
-
-      <button
-        onClick={handleConfirmPayment}
-        disabled={isProcessing || !!success}
-        style={{ width: "100%", padding: "16px", background: success ? "#10b981" : "#0891b2", color: "white", border: "none", borderRadius: "10px", fontWeight: "bold", fontSize: "1rem", cursor: "pointer", opacity: isProcessing ? 0.7 : 1 }}
-      >
-        {isProcessing ? "Processing..." : success ? "Booking Completed" : `Confirm & ${paymentMethod === 'cash' ? 'Book' : 'Pay'}`}
-      </button>
     </div>
   );
 }
