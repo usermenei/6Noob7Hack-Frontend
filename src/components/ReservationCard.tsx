@@ -13,23 +13,43 @@ const formatImageUrl = (url?: string) => {
   return url;
 };
 
-const toThaiTime = (dateStr: string) => {
-  const date = new Date(dateStr);
-  return date.toLocaleTimeString("en-GB", {
-    timeZone: "Asia/Bangkok",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
-};
-
 const toDisplayTime = (dateStr: string) => {
   const date = new Date(dateStr);
-  date.setHours(date.getHours());
   return date.toLocaleTimeString("en-GB", {
     timeZone: "UTC",
     hour: "2-digit",
     minute: "2-digit",
   });
+};
+
+// Groups sorted slots into continuous ranges
+// e.g. [05-06, 06-07, 08-09] → ["05:00 - 07:00", "08:00 - 09:00"]
+const groupContinuousSlots = (
+  slots: { _id: string; startTime: string; endTime: string }[]
+): string[] => {
+  if (slots.length === 0) return [];
+
+  const groups: string[] = [];
+  let groupStart = slots[0].startTime;
+  let groupEnd = slots[0].endTime;
+
+  for (let i = 1; i < slots.length; i++) {
+    const prevEnd = new Date(slots[i - 1].endTime).getTime();
+    const currStart = new Date(slots[i].startTime).getTime();
+
+    if (currStart === prevEnd) {
+      // Continuous — extend the current group
+      groupEnd = slots[i].endTime;
+    } else {
+      // Gap — push current group and start a new one
+      groups.push(`${toDisplayTime(groupStart)} - ${toDisplayTime(groupEnd)}`);
+      groupStart = slots[i].startTime;
+      groupEnd = slots[i].endTime;
+    }
+  }
+
+  groups.push(`${toDisplayTime(groupStart)} - ${toDisplayTime(groupEnd)}`);
+  return groups;
 };
 
 interface ReservationCardProps {
@@ -60,30 +80,20 @@ export default function ReservationCard({
   const startDateObj =
     slots.length > 0 ? new Date(slots[0].startTime) : null;
 
-  const endDateObj =
-    slots.length > 0
-      ? new Date(slots[slots.length - 1].endTime)
-      : null;
-
   const isValid = (d: Date | null): d is Date =>
     d !== null && !isNaN(d.getTime());
 
   let dateStr = "-";
   if (isValid(startDateObj)) {
     dateStr = startDateObj.toLocaleDateString("en-GB", {
-      timeZone: "Asia/Bangkok", 
+      timeZone: "Asia/Bangkok",
       day: "numeric",
       month: "short",
       year: "numeric",
     });
   }
 
-  let timeDisplay = "-";
-  if (isValid(startDateObj) && isValid(endDateObj)) {
-    timeDisplay = `${toDisplayTime(slots[0].startTime)} - ${toDisplayTime(
-      slots[slots.length - 1].endTime
-    )}`;
-  }
+  const timeRanges = groupContinuousSlots(slots);
 
   const userName = r.user?.name ?? "Unknown User";
 
@@ -131,9 +141,18 @@ export default function ReservationCard({
           </p>
 
           <div className={styles.dateTimeContainer}>
-            <p className={styles.dateTime}>
-              📅 {dateStr} at {timeDisplay}
-            </p>
+            <div className={styles.dateTime}>
+              <p style={{ fontSize: "0.8rem" }}>📅 {dateStr}</p>
+              {timeRanges.length > 0 ? (
+                timeRanges.map((range, i) => (
+                  <p key={i} className={styles.timeSlot}>
+                    🕐 {range}
+                  </p>
+                ))
+              ) : (
+                <p className={styles.timeSlot}>-</p>
+              )}
+            </div>
 
             <span
               className={`${styles.statusBadge} ${getStatusClass(
@@ -148,19 +167,13 @@ export default function ReservationCard({
 
       <div className={styles.actionsContainer}>
         {(isAdmin || r.status === "pending") && (
-          <button
-            onClick={() => onEdit(r)}
-            className={styles.btnEdit}
-          >
+          <button onClick={() => onEdit(r)} className={styles.btnEdit}>
             Edit
           </button>
         )}
 
         {isAdmin && r.status === "pending" && (
-          <button
-            onClick={() => onApprove(r._id)}
-            className={styles.btnApprove}
-          >
+          <button onClick={() => onApprove(r._id)} className={styles.btnApprove}>
             Approve
           </button>
         )}
@@ -168,10 +181,7 @@ export default function ReservationCard({
         {(isAdmin ||
           r.status === "cancelled" ||
           r.status === "success") && (
-          <button
-            onClick={() => onDelete(r._id)}
-            className={styles.btnDelete}
-          >
+          <button onClick={() => onDelete(r._id)} className={styles.btnDelete}>
             Delete
           </button>
         )}
