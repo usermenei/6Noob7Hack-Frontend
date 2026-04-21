@@ -142,7 +142,7 @@ export default function RoomPage() {
               <h2 className={styles.sectionTitle}>Reserve a Space</h2>
               <DatePicker
                 selected={selectedDate}
-                onChange={(date) => { setSelectedDate(date); setDateStr(date ? formatDateForApi(date) : ""); }}
+                onChange={(date: Date | null) => { setSelectedDate(date); setDateStr(date ? formatDateForApi(date) : ""); }}
                 dateFormat="dd/MM/yyyy"
                 minDate={new Date()}
                 className={styles.dateInput}
