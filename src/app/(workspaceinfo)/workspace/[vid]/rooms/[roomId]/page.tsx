@@ -8,9 +8,10 @@ import Image from "next/image";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import styles from "./RoomPage.module.css";
-import PaymentView from "@/components/PaymentView"; 
+import PaymentView from "@/components/PaymentView";
 
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
+const BASE =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
 const fixImageUrl = (url: string) => {
   if (!url) return "";
@@ -22,13 +23,17 @@ const fixImageUrl = (url: string) => {
 
 const toDisplayTime = (dateStr: string) => {
   const date = new Date(dateStr);
-  return date.toLocaleTimeString("en-GB", { timeZone: "UTC", hour: "2-digit", minute: "2-digit" });
+  return date.toLocaleTimeString("en-GB", {
+    timeZone: "UTC",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
 };
 
 const formatDateForApi = (d: Date) => {
   const year = d.getFullYear();
-  const month = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
 };
 
@@ -45,7 +50,7 @@ export default function RoomPage() {
   const [slots, setSlots] = useState<any[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [error, setError] = useState("");
-  
+
   // Payment States
   const [showPayment, setShowPayment] = useState(false);
   const [reservationId, setReservationId] = useState<string | null>(null);
@@ -54,7 +59,9 @@ export default function RoomPage() {
   const fetchData = async () => {
     if (!dateStr) return;
     try {
-      const res = await fetch(`${BASE}/coworkingspaces/${vid}/rooms/${roomId}?date=${dateStr}`);
+      const res = await fetch(
+        `${BASE}/coworkingspaces/${vid}/rooms/${roomId}?date=${dateStr}`,
+      );
       const json = await res.json();
       if (!res.ok) throw new Error(json.message);
       setRoom(json.data);
@@ -88,15 +95,21 @@ export default function RoomPage() {
 
   // 🌟 สร้าง Reservation ก่อนตาม US2-1
   const handleProceedToPayment = async () => {
-    if (!token) { setError("Please login first."); return; }
+    if (!token) {
+      setError("Please login first.");
+      return;
+    }
     if (selected.length === 0) return;
-    
+
     setIsSubmitting(true);
     setError("");
     try {
       const res = await fetch(`${BASE}/reservations`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ timeSlotIds: selected }),
       });
       const json = await res.json();
@@ -114,13 +127,24 @@ export default function RoomPage() {
   return (
     <main className={styles.main}>
       <header className={styles.header}>
-        <Link href={`/workspace/${vid}/rooms`} className={styles.backLink}>← Back to Rooms</Link>
+        <Link href={`/workspace/${vid}/rooms`} className={styles.backLink}>
+          ← Back to Rooms
+        </Link>
       </header>
 
       <div className={styles.container}>
         <div className={styles.imageCard}>
           <div className={styles.imageWrapper}>
-            {room?.picture ? <Image src={fixImageUrl(room.picture)} alt="Room" fill style={{ objectFit: "cover" }} /> : "🏢"}
+            {room?.picture ? (
+              <Image
+                src={fixImageUrl(room.picture)}
+                alt="Room"
+                fill
+                style={{ objectFit: "cover" }}
+              />
+            ) : (
+              "🏢"
+            )}
           </div>
           <div className={styles.roomInfo}>
             <h1 className={styles.roomName}>{room?.name || "Room Details"}</h1>
@@ -130,11 +154,11 @@ export default function RoomPage() {
 
         <div className={styles.bookingCard}>
           {showPayment && reservationId ? (
-            <PaymentView 
+            <PaymentView
               reservationId={reservationId}
-              token={token} 
-              totalPrice={totalPrice} 
-              onPaymentSuccess={() => router.push("/mybooking")} 
+              token={token}
+              totalPrice={totalPrice}
+              onPaymentSuccess={() => router.push("/mybooking")}
               onBack={() => setShowPayment(false)}
             />
           ) : (
@@ -142,41 +166,68 @@ export default function RoomPage() {
               <h2 className={styles.sectionTitle}>Reserve a Space</h2>
               <DatePicker
                 selected={selectedDate}
-                onChange={(date: Date | null) => { setSelectedDate(date); setDateStr(date ? formatDateForApi(date) : ""); }}
+                onChange={(date: Date | null) => {
+                  setSelectedDate(date);
+                  setDateStr(date ? formatDateForApi(date) : "");
+                }}
                 dateFormat="dd/MM/yyyy"
                 minDate={new Date()}
                 className={styles.dateInput}
               />
-              
-              {error && <p style={{ color: 'red', marginTop: '10px' }}>{error}</p>}
 
-              <div className={styles.slotGrid} style={{ marginTop: '20px' }}>
+              {error && (
+                <p style={{ color: "red", marginTop: "10px" }}>{error}</p>
+              )}
+
+              <div className={styles.slotGrid} style={{ marginTop: "20px" }}>
                 {slots.map((slot) => (
-                  <div 
-                    key={slot.timeSlotId} 
+                  <div
+                    key={slot.timeSlotId}
                     onClick={() => toggleSlot(slot.timeSlotId, slot.status)}
-                    className={`${styles.slot} ${selected.includes(slot.timeSlotId) ? styles.slotSelected : (slot.status === 'booked' ? styles.slotBooked : styles.slotAvailable)}`}
+                    className={`${styles.slot} ${selected.includes(slot.timeSlotId) ? styles.slotSelected : slot.status === "booked" ? styles.slotBooked : styles.slotAvailable}`}
                   >
-                    <span>{toDisplayTime(slot.startTime)} - {toDisplayTime(slot.endTime)}</span>
-                    <span style={{ fontWeight: 'bold' }}>฿{slot.price}</span>
+                    <span>
+                      {toDisplayTime(slot.startTime)} -{" "}
+                      {toDisplayTime(slot.endTime)}
+                    </span>
+                    <span style={{ fontWeight: "bold" }}>฿{slot.price}</span>
                   </div>
                 ))}
               </div>
 
               {selected.length > 0 && (
-                <div style={{ margin: '20px 0', padding: '15px', background: '#f8fafc', borderRadius: '10px', display: 'flex', justifyContent: 'space-between' }}>
+                <div
+                  style={{
+                    margin: "20px 0",
+                    padding: "15px",
+                    background: "#f8fafc",
+                    borderRadius: "10px",
+                    display: "flex",
+                    justifyContent: "space-between",
+                  }}
+                >
                   <strong>Total Price:</strong>
-                  <strong style={{ fontSize: '1.2rem' }}>฿{totalPrice}</strong>
+                  <strong style={{ fontSize: "1.2rem" }}>฿{totalPrice}</strong>
                 </div>
               )}
 
-              <button 
-                onClick={handleProceedToPayment} 
+              <button
+                onClick={handleProceedToPayment}
                 disabled={isSubmitting || selected.length === 0}
                 className={styles.bookBtn}
-                style={{ width: '100%', padding: '15px', background: '#0891b2', color: 'white', border: 'none', borderRadius: '8px', cursor: 'pointer' }}
+                style={{
+                  width: "100%",
+                  padding: "15px",
+                  background: "#0891b2",
+                  color: "white",
+                  border: "none",
+                  borderRadius: "8px",
+                  cursor: "pointer",
+                }}
               >
-                {isSubmitting ? "Creating Reservation..." : `Confirm Reservation (${selected.length} slots)`}
+                {isSubmitting
+                  ? "Creating Reservation..."
+                  : `Confirm Reservation (${selected.length} slots)`}
               </button>
             </>
           )}

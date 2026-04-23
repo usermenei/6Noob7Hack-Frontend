@@ -26,8 +26,7 @@ export default function BookingList() {
   const isAdmin = (session?.user as any)?.role === "admin";
 
   const BASE =
-    process.env.NEXT_PUBLIC_BACKEND_URL ||
-    "http://localhost:5000/api/v1";
+    process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
   const fetchReservations = async () => {
     if (!session?.user?.token) {
@@ -53,8 +52,7 @@ export default function BookingList() {
     if (!session?.user?.token) return;
 
     const targetRes = reservations.find((r) => r._id === id);
-    const isUserClearingHistory =
-      !isAdmin && targetRes?.status === "success";
+    const isUserClearingHistory = !isAdmin && targetRes?.status === "success";
 
     const confirmMsg = isUserClearingHistory
       ? "Do you want to remove this completed reservation from your history?"
@@ -63,22 +61,17 @@ export default function BookingList() {
     if (!confirm(confirmMsg)) return;
 
     try {
-      const res = await fetch(
-        `${BASE}/reservations/${id}/permanent`,
-        {
-          method: "DELETE",
-          headers: {
-            Authorization: `Bearer ${session.user.token}`,
-          },
-        }
-      );
+      const res = await fetch(`${BASE}/reservations/${id}/permanent`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${session.user.token}`,
+        },
+      });
 
       const json = await res.json();
       if (!res.ok) throw new Error(json.message);
 
-      setReservations((prev) =>
-        prev.filter((r) => r._id !== id)
-      );
+      setReservations((prev) => prev.filter((r) => r._id !== id));
     } catch (err: any) {
       alert(err?.message ?? "Failed to delete.");
     }
@@ -93,9 +86,7 @@ export default function BookingList() {
       await confirmReservation(id, session.user.token as string);
 
       setReservations((prev) =>
-        prev.map((r) =>
-          r._id === id ? { ...r, status: "success" } : r
-        )
+        prev.map((r) => (r._id === id ? { ...r, status: "success" } : r)),
       );
     } catch (err: any) {
       alert(err?.message ?? "Failed to approve.");
@@ -110,8 +101,7 @@ export default function BookingList() {
   // ✅ FILTER
   const filteredReservations = reservations.filter((r) => {
     const userName = r.user?.name?.toLowerCase() || "";
-    const spaceName =
-      r.room?.coworkingSpace?.name?.toLowerCase() || "";
+    const spaceName = r.room?.coworkingSpace?.name?.toLowerCase() || "";
 
     const matchUser =
       !isAdmin ||
@@ -122,38 +112,33 @@ export default function BookingList() {
       spaceSearchTerm === "" ||
       spaceName.includes(spaceSearchTerm.toLowerCase());
 
-    const matchStatus =
-      statusFilter === "all" || r.status === statusFilter;
+    const matchStatus = statusFilter === "all" || r.status === statusFilter;
 
     return matchUser && matchSpace && matchStatus;
   });
 
   // ✅ SORT
-  const sortedReservations = [...filteredReservations].sort(
-    (a, b) => {
-      const getStart = (r: Reservation) =>
-        r.timeSlots?.length
-          ? new Date(r.timeSlots[0].startTime).getTime()
-          : 0;
+  const sortedReservations = [...filteredReservations].sort((a, b) => {
+    const getStart = (r: Reservation) =>
+      r.timeSlots?.length ? new Date(r.timeSlots[0].startTime).getTime() : 0;
 
-      if (sortBy === "date-asc") return getStart(a) - getStart(b);
-      if (sortBy === "date-desc") return getStart(b) - getStart(a);
+    if (sortBy === "date-asc") return getStart(a) - getStart(b);
+    if (sortBy === "date-desc") return getStart(b) - getStart(a);
 
-      if (sortBy === "space-asc") {
-        const nameA = a.room?.coworkingSpace?.name || "";
-        const nameB = b.room?.coworkingSpace?.name || "";
-        return nameA.localeCompare(nameB);
-      }
-
-      if (sortBy === "user-asc") {
-        const userA = a.user?.name || "";
-        const userB = b.user?.name || "";
-        return userA.localeCompare(userB);
-      }
-
-      return 0;
+    if (sortBy === "space-asc") {
+      const nameA = a.room?.coworkingSpace?.name || "";
+      const nameB = b.room?.coworkingSpace?.name || "";
+      return nameA.localeCompare(nameB);
     }
-  );
+
+    if (sortBy === "user-asc") {
+      const userA = a.user?.name || "";
+      const userB = b.user?.name || "";
+      return userA.localeCompare(userB);
+    }
+
+    return 0;
+  });
 
   return (
     <div className={styles.container}>
@@ -163,9 +148,7 @@ export default function BookingList() {
 
       <p className={styles.subtitle}>
         {sortedReservations.length}{" "}
-        {sortedReservations.length === 1
-          ? "reservation"
-          : "reservations"}
+        {sortedReservations.length === 1 ? "reservation" : "reservations"}
       </p>
 
       {reservations.length > 0 && (
@@ -204,9 +187,7 @@ export default function BookingList() {
               <option value="date-asc">📅 Date (Oldest First)</option>
               <option value="date-desc">📅 Date (Newest First)</option>
               <option value="space-asc">🏢 Space Name (A-Z)</option>
-              {isAdmin && (
-                <option value="user-asc">👤 User Name (A-Z)</option>
-              )}
+              {isAdmin && <option value="user-asc">👤 User Name (A-Z)</option>}
             </select>
 
             <select
@@ -235,29 +216,20 @@ export default function BookingList() {
         </div>
       )}
 
-      {session && loading && (
-        <p className={styles.messageText}>Loading...</p>
-      )}
+      {session && loading && <p className={styles.messageText}>Loading...</p>}
 
-      {session && error && (
-        <div className={styles.errorCard}>{error}</div>
-      )}
+      {session && error && <div className={styles.errorCard}>{error}</div>}
 
-      {session &&
-        !loading &&
-        sortedReservations.length === 0 &&
-        !error && (
-          <div className={styles.messageCard}>
-            <div className={styles.emptyIcon}>🏢</div>
-            <p className={styles.messageText}>
-              {searchTerm ||
-              spaceSearchTerm ||
-              statusFilter !== "all"
-                ? "No reservations found matching your criteria."
-                : "No reservations yet."}
-            </p>
-          </div>
-        )}
+      {session && !loading && sortedReservations.length === 0 && !error && (
+        <div className={styles.messageCard}>
+          <div className={styles.emptyIcon}>🏢</div>
+          <p className={styles.messageText}>
+            {searchTerm || spaceSearchTerm || statusFilter !== "all"
+              ? "No reservations found matching your criteria."
+              : "No reservations yet."}
+          </p>
+        </div>
+      )}
 
       {sortedReservations.map((r) => (
         <ReservationCard

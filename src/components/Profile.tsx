@@ -111,6 +111,24 @@ export default function Profile({ session, userData }: ProfileProps) {
         </div>
 
         <Link
+          href="/payments/history"
+          style={{
+            display: "block",
+            textAlign: "center",
+            padding: "14px",
+            borderRadius: "16px",
+            background: "#eff6ff",
+            color: "#2563eb",
+            fontWeight: 700,
+            border: "1px solid #bfdbfe",
+            marginBottom: "12px",
+            textDecoration: "none"
+          }}
+        >
+          Payment History
+        </Link>
+
+        <Link
           href="/api/auth/signout"
           style={{
             display: "block",
@@ -120,7 +138,8 @@ export default function Profile({ session, userData }: ProfileProps) {
             background: "#fee2e2",
             color: "#dc2626",
             fontWeight: 700,
-            border: "1px solid #fecaca"
+            border: "1px solid #fecaca",
+            textDecoration: "none"
           }}
         >
           Sign Out

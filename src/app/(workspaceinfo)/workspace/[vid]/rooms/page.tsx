@@ -8,8 +8,7 @@ import {
 import styles from "./RoomsPage.module.css"; // นำเข้า CSS Module
 
 const BASE =
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  "http://localhost:5000/api/v1";
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
 const fixImageUrl = (url: string) => {
   if (!url) return "";
@@ -51,7 +50,8 @@ export default function RoomsPage({
           <h1 className={styles.heroTitle}>Find your perfect room</h1>
 
           <p className={styles.heroSubtitle}>
-            {rooms.length} room{rooms.length !== 1 ? "s" : ""} available · Compare, book, and work smarter
+            {rooms.length} room{rooms.length !== 1 ? "s" : ""} available ·
+            Compare, book, and work smarter
           </p>
 
           <AdminCreateButton vid={vid} />
@@ -66,14 +66,15 @@ export default function RoomsPage({
           <div className={styles.emptyState}>
             <div className={styles.emptyIcon}>🏢</div>
             <p className={styles.emptyTitle}>No rooms available yet</p>
-            <p className={styles.emptyDesc}>Check back later or contact the host</p>
+            <p className={styles.emptyDesc}>
+              Check back later or contact the host
+            </p>
           </div>
         )}
 
         <div className={styles.roomList}>
           {rooms.map((room: any, i: number) => (
             <div className={styles.roomCard} key={room._id}>
-              
               {/* IMAGE */}
               <div className={styles.imageWrap}>
                 {room.picture ? (
@@ -82,7 +83,12 @@ export default function RoomsPage({
                     alt={room.name}
                     width={280}
                     height={240}
-                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      display: "block",
+                    }}
                   />
                 ) : (
                   <div className={styles.fallbackImage}>🏢</div>
@@ -92,7 +98,6 @@ export default function RoomsPage({
 
               {/* DETAILS */}
               <div className={styles.detailsWrap}>
-                
                 {/* ⭐️ ย้ายปุ่ม Edit / Delete มาไว้มุมขวาบนตรงนี้แทน และใช้ CSS บังคับดีไซน์ให้ซอฟต์ลง */}
                 <div className={styles.adminActions}>
                   <AdminRoomActions roomId={room._id} vid={vid} />
@@ -104,22 +109,24 @@ export default function RoomsPage({
                 </div>
 
                 <h2 className={styles.roomName}>{room.name}</h2>
-                
+
                 <p className={styles.roomDesc}>
                   Modern workspace designed for focus and productivity.
                 </p>
 
                 <div className={styles.badgesRow}>
                   <span className={styles.capacityBadge}>
-                    👥 {room.capacity} {room.capacity === 1 ? "person" : "people"}
+                    👥 {room.capacity}{" "}
+                    {room.capacity === 1 ? "person" : "people"}
                   </span>
-                  <span className={styles.featureBadge}>
-                    ✓ Instant booking
-                  </span>
+                  <span className={styles.featureBadge}>✓ Instant booking</span>
                 </div>
 
                 <div className={styles.footerRow}>
-                  <Link href={`/workspace/${vid}/rooms/${room._id}`} className={styles.checkBtn}>
+                  <Link
+                    href={`/workspace/${vid}/rooms/${room._id}`}
+                    className={styles.checkBtn}
+                  >
                     Check availability →
                   </Link>
                 </div>
@@ -132,7 +139,6 @@ export default function RoomsPage({
                 <div className={styles.priceUnit}>per hour</div>
                 <div className={styles.bestValue}>BEST VALUE</div>
               </div>
-
             </div>
           ))}
         </div>

@@ -1,14 +1,19 @@
 // libs/paymentApi.ts
 
-const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
+const BASE_URL =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
 // 1. ฟังก์ชันสร้าง Payment
-export async function createPayment(reservationId: string, method: string, token: string) {
+export async function createPayment(
+  reservationId: string,
+  method: string,
+  token: string,
+) {
   const res = await fetch(`${BASE_URL}/payments`, {
     method: "POST",
-    headers: { 
-      "Content-Type": "application/json", 
-      Authorization: `Bearer ${token}` 
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ reservationId, method }),
   });
@@ -21,9 +26,9 @@ export async function createPayment(reservationId: string, method: string, token
 export async function generateQrCode(paymentId: string, token: string) {
   const res = await fetch(`${BASE_URL}/payments/${paymentId}/qr`, {
     method: "POST",
-    headers: { 
-      "Content-Type": "application/json", 
-      Authorization: `Bearer ${token}` 
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
   });
   const json = await res.json();
@@ -35,12 +40,26 @@ export async function generateQrCode(paymentId: string, token: string) {
 export async function simulateConfirmPayment(paymentId: string, token: string) {
   const res = await fetch(`${BASE_URL}/payments/${paymentId}/confirm`, {
     method: "PUT",
-    headers: { 
-      "Content-Type": "application/json", 
-      Authorization: `Bearer ${token}` 
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
     },
   });
   const json = await res.json();
   if (!res.ok) throw new Error(json.message || "Simulation failed");
+  return json.data;
+}
+
+// 4. ฟังก์ชันดึงประวัติการจ่ายเงินของผู้ใช้
+export async function getPaymentsByUser(userId: string, token: string) {
+  const res = await fetch(`${BASE_URL}/payments/user/${userId}`, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store",
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.message || "Failed to fetch payment history");
   return json.data;
 }

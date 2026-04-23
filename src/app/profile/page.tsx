@@ -6,10 +6,10 @@ import Profile from "@/components/Profile";
 const calculateRank = (entries: number) => {
   if (entries >= 500) return { rank: 6, title: "Grandmaster", discount: 90 };
   if (entries >= 100) return { rank: 5, title: "Legend", discount: 50 };
-  if (entries >= 25)  return { rank: 4, title: "Diamond", discount: 25 };
-  if (entries >= 10)  return { rank: 3, title: "Gold", discount: 10 };
-  if (entries >= 5)   return { rank: 2, title: "Silver", discount: 5 };
-  if (entries >= 1)   return { rank: 1, title: "Bronze", discount: 0 };
+  if (entries >= 25) return { rank: 4, title: "Diamond", discount: 25 };
+  if (entries >= 10) return { rank: 3, title: "Gold", discount: 10 };
+  if (entries >= 5) return { rank: 2, title: "Silver", discount: 5 };
+  if (entries >= 1) return { rank: 1, title: "Bronze", discount: 0 };
   return { rank: 0, title: "Newbie", discount: 0 };
 };
 
@@ -19,7 +19,7 @@ async function getUserProfile(token: string | undefined | null) {
 
   try {
     const backendUrl =
-      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
+      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
     const res = await fetch(`${backendUrl}/auth/me`, {
       method: "GET",
@@ -47,9 +47,8 @@ async function getUserProfile(token: string | undefined | null) {
     return {
       ...user,
       numberOfEntries: entries, // ✅ keep entries
-      ...rankData              // ✅ add rank, title, discount
+      ...rankData, // ✅ add rank, title, discount
     };
-
   } catch (error) {
     console.error("FETCH ERROR:", error);
     return null;
@@ -59,9 +58,7 @@ async function getUserProfile(token: string | undefined | null) {
 export default async function ProfilePage() {
   const session = await getServerSession(authOptions);
 
-  const userData = session
-    ? await getUserProfile(session.user?.token)
-    : null;
+  const userData = session ? await getUserProfile(session.user?.token) : null;
 
   return <Profile session={session} userData={userData} />;
 }
