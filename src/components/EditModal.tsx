@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Reservation } from "@/libs/getReservations";
+import CancelModal from "./CancelModal";
 
 const BASE =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
@@ -50,6 +51,7 @@ export default function EditModal({
   const [selected, setSelected] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const originalSlotIds = reservation.timeSlots.map((s: any) => s._id);
 
@@ -107,8 +109,11 @@ export default function EditModal({
     }
   };
 
-  const handleCancelReservation = async () => {
-    if (!confirm("Cancel this reservation?")) return;
+  const handleCancelReservation = () => {
+    setShowCancelConfirm(true);
+  };
+
+  const confirmCancellation = async () => {
     try {
       setLoading(true);
       const res = await fetch(`${BASE}/reservations/${reservation._id}`, {
@@ -122,6 +127,7 @@ export default function EditModal({
       setError(err.message);
     } finally {
       setLoading(false);
+      setShowCancelConfirm(false);
     }
   };
 
@@ -291,6 +297,14 @@ export default function EditModal({
           </div>
         </div>
       </div>
+
+      {showCancelConfirm && (
+        <CancelModal
+          reservation={reservation}
+          onClose={() => setShowCancelConfirm(false)}
+          onConfirm={confirmCancellation}
+        />
+      )}
     </div>
   );
 }

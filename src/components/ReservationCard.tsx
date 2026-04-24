@@ -58,6 +58,7 @@ interface ReservationCardProps {
   onApprove: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: (res: Reservation) => void;
+  onPaymentMethodChange?: (id: string, method: string) => void;
 }
 
 export default function ReservationCard({
@@ -66,6 +67,7 @@ export default function ReservationCard({
   onApprove,
   onDelete,
   onEdit,
+  onPaymentMethodChange,
 }: ReservationCardProps) {
   const space = r.room?.coworkingSpace;
 
@@ -154,18 +156,40 @@ export default function ReservationCard({
               )}
             </div>
 
-            <span
-              className={`${styles.statusBadge} ${getStatusClass(
-                r.status
-              )}`}
-            >
-              {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
-            </span>
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <span
+                className={`${styles.statusBadge} ${getStatusClass(
+                  r.status
+                )}`}
+              >
+                {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+              </span>
+
+              {r.paymentMethod && (
+                <span className={styles.paymentMethodBadge}>
+                  💳 {r.paymentMethod === 'qr' ? 'QR Code' : r.paymentMethod === 'cash' ? 'Cash' : 'Not Set'}
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       <div className={styles.actionsContainer}>
+        {!isAdmin && r.status === "pending" && (
+          <button
+            onClick={() => {
+              const newMethod = r.paymentMethod === 'qr' ? 'cash' : 'qr';
+              if (confirm(`Switch payment method to ${newMethod.toUpperCase()}?`)) {
+                onPaymentMethodChange?.(r._id, newMethod);
+              }
+            }}
+            className={styles.btnPayment}
+          >
+            💳 Change Method
+          </button>
+        )}
+
         {(isAdmin || r.status === "pending") && (
           <button onClick={() => onEdit(r)} className={styles.btnEdit}>
             Edit

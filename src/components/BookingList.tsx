@@ -9,6 +9,7 @@ import Link from "next/link";
 import styles from "./BookingList.module.css";
 import ReservationCard from "./ReservationCard";
 import EditModal from "./EditModal";
+import CancelModal from "./CancelModal";
 
 export default function BookingList() {
   const { data: session } = useSession();
@@ -22,6 +23,7 @@ export default function BookingList() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const [editingRes, setEditingRes] = useState<Reservation | null>(null);
+  const [cancellingRes, setCancellingRes] = useState<Reservation | null>(null);
 
   const isAdmin = (session?.user as any)?.role === "admin";
 
@@ -52,6 +54,14 @@ export default function BookingList() {
     if (!session?.user?.token) return;
 
     const targetRes = reservations.find((r) => r._id === id);
+    if (!targetRes) return;
+
+    // If pending, show detailed cancellation modal
+    if (targetRes.status === "pending" && !isAdmin) {
+      setCancellingRes(targetRes);
+      return;
+    }
+
     const isUserClearingHistory = !isAdmin && targetRes?.status === "success";
 
     const confirmMsg = isUserClearingHistory
@@ -96,6 +106,39 @@ export default function BookingList() {
   const handleEditSuccess = () => {
     setEditingRes(null);
     fetchReservations();
+  };
+
+  // ✅ CHANGE PAYMENT METHOD
+  const handlePaymentMethodChange = async (resId: string, method: string) => {
+    if (!session?.user?.token) return;
+
+    try {
+      // We need the payment record for this reservation
+      // The backend updatePaymentMethod needs the paymentId
+      // I'll update the backend to allow updating by reservationId if easier, 
+      // but for now I'll fetch the payment history or use a specific endpoint
+      
+      const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
+      const res = await fetch(`${BASE_URL}/payments/reservation/${resId}/method`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.user.token}`,
+        },
+        body: JSON.stringify({ method }),
+      });
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message);
+
+      // Success! Update local state
+      setReservations((prev) =>
+        prev.map((r) => (r._id === resId ? { ...r, paymentMethod: method as any } : r))
+      );
+      alert("✅ Payment method updated successfully!");
+    } catch (err: any) {
+      alert(err?.message ?? "Failed to update payment method.");
+    }
   };
 
   // ✅ FILTER
@@ -239,6 +282,7 @@ export default function BookingList() {
           onApprove={handleApprove}
           onDelete={handleDelete}
           onEdit={(res) => setEditingRes(res)}
+          onPaymentMethodChange={handlePaymentMethodChange}
         />
       ))}
 
@@ -249,6 +293,16 @@ export default function BookingList() {
           token={session?.user?.token as string}
           onClose={() => setEditingRes(null)}
           onSuccess={handleEditSuccess}
+        />
+      )}
+      {cancellingRes && (
+        <CancelModal
+          reservation={cancellingRes}
+          onClose={() => setCancellingRes(null)}
+          onConfirm={(id) => {
+            setCancellingRes(null);
+            handleDelete(id);
+          }}
         />
       )}
     </div>

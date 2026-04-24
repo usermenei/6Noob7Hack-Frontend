@@ -63,3 +63,22 @@ export async function getPaymentsByUser(userId: string, token: string) {
   if (!res.ok) throw new Error(json.message || "Failed to fetch payment history");
   return json.data;
 }
+
+// 5. ฟังก์ชันเปลี่ยนวิธีการจ่ายเงิน (เฉพาะตอน pending)
+export async function updatePaymentMethod(
+  paymentId: string,
+  method: string,
+  token: string,
+) {
+  const res = await fetch(`${BASE_URL}/payments/${paymentId}/method`, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ method }),
+  });
+  const json = await res.json();
+  if (!res.ok) throw new Error(json.message || "Failed to update payment method");
+  return json.data;
+}

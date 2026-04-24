@@ -31,6 +31,7 @@ export interface Reservation {
   }[];
 
   status: "pending" | "success" | "cancelled";
+  paymentMethod?: "qr" | "cash" | "not_set";
 
   createdAt: string;
   updatedAt: string;
