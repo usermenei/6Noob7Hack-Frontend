@@ -30,7 +30,7 @@ export async function generateQrCode(paymentId: string, token: string) {
   if (!res.ok) throw new Error(json.message || "Failed to generate QR");
   return json.data;
 }
-
+    
 // 3. ฟังก์ชันจำลองการจ่ายเงินสำเร็จ (สำหรับเทส)
 export async function simulateConfirmPayment(paymentId: string, token: string) {
   const res = await fetch(`${BASE_URL}/payments/${paymentId}/confirm`, {
