@@ -1,4 +1,5 @@
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
+const BASE =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
 export interface UserProfile {
   _id: string;
@@ -14,7 +15,9 @@ export interface UserProfileJson {
   data: UserProfile;
 }
 
-export default async function getUserProfile(token: string): Promise<UserProfileJson> {
+export default async function getUserProfile(
+  token: string,
+): Promise<UserProfileJson> {
   const response = await fetch(`${BASE}/auth/me`, {
     method: "GET",
     headers: {

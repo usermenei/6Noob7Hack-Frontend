@@ -1,8 +1,9 @@
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
+const BASE =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
 export default async function createReservation(
   timeSlotIds: string[],
-  token: string
+  token: string,
 ) {
   const res = await fetch(`${BASE}/reservations`, {
     method: "POST",

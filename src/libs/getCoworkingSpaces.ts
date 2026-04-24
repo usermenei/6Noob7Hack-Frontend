@@ -1,4 +1,5 @@
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
+const BASE =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
 export interface CoworkingSpaceItem {
   _id: string;
@@ -18,7 +19,7 @@ export interface CoworkingSpaceJson {
 }
 
 export default async function getCoworkingSpaces(
-  token: string
+  token: string,
 ): Promise<CoworkingSpaceJson> {
   const res = await fetch(`${BASE}/coworkingspaces`, {
     headers: {

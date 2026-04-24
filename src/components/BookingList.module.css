@@ -176,6 +176,18 @@
     font-weight: 700;
     padding: 2px 8px;
     border-radius: 20px;
+    text-align: center;
+}
+
+.paymentMethodBadge {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: #f3f4f6;
+    color: #4b5563;
+    border: 1px solid #d1d5db;
+    text-align: center;
 }
 
 .statusPending {
@@ -302,6 +314,25 @@
 
 .btnEdit:hover {
     background: #bae6fd;
+}
+
+/* --- ปุ่ม Change Payment --- */
+.btnPayment {
+    font-size: 12px;
+    font-weight: 700;
+    color: #0d9488;
+    background: #f0fdfa;
+    border: 1px solid #99f6e4;
+    padding: 7px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.btnPayment:hover {
+    background: #ccfbf1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 /* --- Modal Popup --- */

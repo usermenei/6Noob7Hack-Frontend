@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
+const BASE =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
 interface BookingFormProps {
   token?: string;
@@ -57,7 +58,7 @@ export default function BookingForm({ initialSpace = "" }: BookingFormProps) {
 
   const toggleSlot = (id: string) => {
     setSelectedSlots((prev) =>
-      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((s) => s !== id) : [...prev, id],
     );
   };
 
@@ -126,8 +127,8 @@ export default function BookingForm({ initialSpace = "" }: BookingFormProps) {
               background: selectedSlots.includes(slot.timeSlotId)
                 ? "green"
                 : slot.status === "booked"
-                ? "gray"
-                : "white",
+                  ? "gray"
+                  : "white",
               color: slot.status === "booked" ? "white" : "black",
             }}
           >

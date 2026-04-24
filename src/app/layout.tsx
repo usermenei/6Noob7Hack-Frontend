@@ -23,7 +23,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           rel="stylesheet"
         />
       </head>
-      <body style={{ fontFamily: "'Nunito', sans-serif", paddingTop: "52px" }}>
+      <body style={{ fontFamily: "'Nunito', sans-serif", paddingTop: "80px" }}>
         <NextAuthProvider session={nextAuthSession}>
           <ReduxProvider>
             <TopMenu />

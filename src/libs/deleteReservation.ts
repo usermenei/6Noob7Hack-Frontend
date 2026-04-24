@@ -1,11 +1,7 @@
 const BASE =
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  "http://localhost:5000/api/v1";
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
-export default async function deleteReservation(
-  id: string,
-  token: string
-) {
+export default async function deleteReservation(id: string, token: string) {
   const res = await fetch(`${BASE}/reservations/${id}`, {
     method: "DELETE",
     headers: {

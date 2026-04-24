@@ -4,8 +4,7 @@ import { useSession } from "next-auth/react";
 import Link from "next/link";
 
 const BASE =
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  "http://localhost:5000/api/v1";
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
 // =====================================================
 // ➕ CREATE ROOM BUTTON

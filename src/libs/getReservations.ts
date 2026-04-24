@@ -1,4 +1,5 @@
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
+const BASE =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
 export interface Reservation {
   _id: string;
@@ -30,6 +31,7 @@ export interface Reservation {
   }[];
 
   status: "pending" | "success" | "cancelled";
+  paymentMethod?: "qr" | "cash" | "not_set";
 
   createdAt: string;
   updatedAt: string;

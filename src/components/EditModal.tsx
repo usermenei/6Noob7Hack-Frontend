@@ -2,10 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { Reservation } from "@/libs/getReservations";
+import CancelModal from "./CancelModal";
 
 const BASE =
-  process.env.NEXT_PUBLIC_BACKEND_URL ||
-  "http://localhost:5000/api/v1";
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
 const toThaiTime = (dateStr: string) => {
   const date = new Date(dateStr);
@@ -51,6 +51,7 @@ export default function EditModal({
   const [selected, setSelected] = useState<string[]>([]);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   const originalSlotIds = reservation.timeSlots.map((s: any) => s._id);
 
@@ -58,12 +59,10 @@ export default function EditModal({
     const fetchSlots = async () => {
       try {
         const firstSlot = reservation.timeSlots[0];
-        const date = new Date(firstSlot.startTime)
-          .toISOString()
-          .split("T")[0];
+        const date = new Date(firstSlot.startTime).toISOString().split("T")[0];
 
         const res = await fetch(
-          `${BASE}/coworkingspaces/${reservation.room.coworkingSpace._id}/rooms/${reservation.room._id}?date=${date}`
+          `${BASE}/coworkingspaces/${reservation.room.coworkingSpace._id}/rooms/${reservation.room._id}?date=${date}`,
         );
 
         const json = await res.json();
@@ -110,8 +109,11 @@ export default function EditModal({
     }
   };
 
-  const handleCancelReservation = async () => {
-    if (!confirm("Cancel this reservation?")) return;
+  const handleCancelReservation = () => {
+    setShowCancelConfirm(true);
+  };
+
+  const confirmCancellation = async () => {
     try {
       setLoading(true);
       const res = await fetch(`${BASE}/reservations/${reservation._id}`, {
@@ -125,17 +127,24 @@ export default function EditModal({
       setError(err.message);
     } finally {
       setLoading(false);
+      setShowCancelConfirm(false);
     }
   };
 
   const handlePermanentDelete = async () => {
-    if (!confirm("⚠️ Permanently delete this reservation? This cannot be undone.")) return;
+    if (
+      !confirm("⚠️ Permanently delete this reservation? This cannot be undone.")
+    )
+      return;
     try {
       setLoading(true);
-      const res = await fetch(`${BASE}/reservations/${reservation._id}/permanent`, {
-        method: "DELETE",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${BASE}/reservations/${reservation._id}/permanent`,
+        {
+          method: "DELETE",
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       const json = await res.json();
       if (!res.ok) throw new Error(json.message);
       onSuccess();
@@ -198,8 +207,8 @@ export default function EditModal({
                   background: isPast
                     ? "#f3f4f6"
                     : isSelected
-                    ? "#0891b2"
-                    : "#e5e7eb",
+                      ? "#0891b2"
+                      : "#e5e7eb",
                   color: isPast ? "#9ca3af" : isSelected ? "#fff" : "#999",
                   cursor: isInteractable ? "pointer" : "not-allowed",
                   opacity: isInteractable ? 1 : 0.4,
@@ -288,6 +297,14 @@ export default function EditModal({
           </div>
         </div>
       </div>
+
+      {showCancelConfirm && (
+        <CancelModal
+          reservation={reservation}
+          onClose={() => setShowCancelConfirm(false)}
+          onConfirm={confirmCancellation}
+        />
+      )}
     </div>
   );
 }

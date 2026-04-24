@@ -1,4 +1,5 @@
-const BASE = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
+const BASE =
+  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
 export interface CoworkingSpaceDetail {
   _id: string;
@@ -22,7 +23,9 @@ export interface CoworkingSpaceDetailJson {
   data: CoworkingSpaceDetail;
 }
 
-export default async function getCoworkingSpace(id: string): Promise<CoworkingSpaceDetailJson> {
+export default async function getCoworkingSpace(
+  id: string,
+): Promise<CoworkingSpaceDetailJson> {
   // ✅ แก้ตรงนี้: เปลี่ยนจาก /coworkingspace/ เป็น /coworkingspaces/
   const response = await fetch(`${BASE}/coworkingspaces/${id}`, {
     cache: "no-store",
