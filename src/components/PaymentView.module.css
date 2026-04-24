@@ -1,141 +1,177 @@
 .container {
-  max-width: 500px;
-  margin: 0 auto;
-  padding: 24px;
-  background-color: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  font-family: inherit;
-}
-
-.header {
-  color: #0056b3; /* ธีมสีน้ำเงินของคุณ */
-  font-size: 1.5rem;
-  font-weight: 700;
-  margin-bottom: 16px;
-  text-align: center;
-}
-
-.textCenter {
-  text-align: center;
-  color: #555;
-  margin-bottom: 24px;
-}
-
-.methodGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
-}
-
-.methodCard {
-  border: 2px solid #e2e8f0;
-  border-radius: 8px;
   padding: 20px;
-  text-align: center;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+}
+
+.backBtn {
+  color: #0891b2;
+  background: none;
+  border: none;
   cursor: pointer;
-  transition: all 0.2s ease;
-  background: #f8fafc;
+  font-weight: bold;
+  margin-bottom: 15px;
+  padding: 0;
 }
 
-.methodCard:hover {
-  border-color: #0056b3;
-  background: #eff6ff;
+.backBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
-.methodCard.selected {
-  border-color: #0056b3;
-  background: #eff6ff;
-  box-shadow: 0 0 0 2px rgba(0, 86, 179, 0.2);
+.title {
+  font-size: 1.4rem;
+  font-weight: bold;
+  margin-bottom: 15px;
 }
 
-.methodIcon {
-  font-size: 2rem;
-  margin-bottom: 8px;
-}
-
-.methodTitle {
-  font-weight: 600;
-  color: #333;
-}
-
-.btnPrimary {
-  width: 100%;
+.errorBox {
   padding: 12px;
-  background-color: #0056b3;
+  background: #fef2f2;
+  color: #b91c1c;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #fecaca;
+}
+
+.successBox {
+  padding: 12px;
+  background: #f0fdf4;
+  color: #166534;
+  border-radius: 8px;
+  margin-bottom: 15px;
+  border: 1px solid #bbf7d0;
+}
+
+.transactionId {
+  font-size: 0.8rem;
+  margin-top: 5px;
+}
+
+.amountCard {
+  background: #f0f9ff;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.amountLabel {
+  font-size: 0.8rem;
+  color: #0369a1;
+  text-transform: uppercase;
+  font-weight: bold;
+}
+
+.amountValue {
+  font-size: 2.2rem;
+  color: #0c4a6e;
+  margin: 5px 0;
+}
+
+.methodSection {
+  margin-bottom: 20px;
+}
+
+.methodLabel {
+  font-weight: bold;
+  margin-bottom: 10px;
+  font-size: 0.9rem;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 10px;
+}
+
+.methodBtn {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.methodBtnActive {
+  border: 2px solid #0891b2;
+  background: #ecfeff;
+}
+
+.confirmBtn {
+  width: 100%;
+  padding: 16px;
+  background: #0891b2;
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 10px;
+  font-weight: bold;
   font-size: 1rem;
-  font-weight: 600;
   cursor: pointer;
-  transition: background-color 0.2s;
+  transition: opacity 0.2s;
 }
 
-.btnPrimary:hover:not(:disabled) {
-  background-color: #004494;
-}
-
-.btnPrimary:disabled {
-  background-color: #94a3b8;
+.confirmBtn:disabled {
+  opacity: 0.7;
   cursor: not-allowed;
 }
 
 .qrContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 20px 0;
+  text-align: center;
+  padding: 20px;
+  border: 1px dashed #cbd5e1;
+  border-radius: 10px;
+  margin-bottom: 20px;
 }
 
 .qrImage {
-  border: 4px solid #0056b3;
-  border-radius: 12px;
-  padding: 8px;
-  background: white;
+  width: 200px;
+  height: 200px;
+  margin: 0 auto;
+  display: block;
 }
 
-.timer {
-  font-size: 1.25rem;
-  font-weight: bold;
-  color: #dc2626; /* สีแดงแจ้งเตือนเวลา */
-  margin-top: 12px;
+.qrSubtext {
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-top: 10px;
 }
 
-.successBox, .errorBox, .cashBox {
-  text-align: center;
-  padding: 24px;
-  border-radius: 8px;
-  margin-bottom: 24px;
-}
-
-.successBox { background-color: #dcfce7; color: #166534; }
-.errorBox { background-color: #fee2e2; color: #991b1b; }
-.cashBox { background-color: #fef9c3; color: #854d0e; }
-
-.statusIcon {
-  font-size: 3rem;
-  margin-bottom: 16px;
-}
-
-/* ปุ่มสำหรับให้คนตรวจงานกดเทส */
-.testActionContainer {
-  margin-top: 24px;
-  padding-top: 16px;
-  border-top: 1px dashed #cbd5e1;
-  display: flex;
-  gap: 12px;
-  justify-content: center;
-}
-
-.btnTest {
+.simulateBtn {
+  margin-top: 15px;
   padding: 8px 16px;
-  background-color: #10b981;
+  background: #10b981;
   color: white;
   border: none;
   border-radius: 6px;
-  font-size: 0.875rem;
   cursor: pointer;
+  font-size: 0.85rem;
+  transition: opacity 0.2s;
 }
-.btnTestFail { background-color: #ef4444; }
+
+.simulateBtn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.userConfirmBtn {
+  margin-top: 20px;
+  width: 100%;
+  padding: 14px;
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: opacity 0.2s;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.userConfirmBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

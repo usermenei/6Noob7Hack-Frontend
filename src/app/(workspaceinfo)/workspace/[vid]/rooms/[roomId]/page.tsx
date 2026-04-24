@@ -55,6 +55,9 @@ export default function RoomPage() {
   const [showPayment, setShowPayment] = useState(false);
   const [reservationId, setReservationId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // 🌟 เพิ่ม State สำหรับเลือกวิธีจ่ายเงิน
+  const [paymentMethod, setPaymentMethod] = useState<"qr" | "cash">("qr");
 
   const fetchData = async () => {
     if (!dateStr) return;
@@ -156,6 +159,7 @@ export default function RoomPage() {
           {showPayment && reservationId ? (
             <PaymentView
               reservationId={reservationId}
+              paymentMethod={paymentMethod}
               token={token}
               totalPrice={totalPrice}
               onPaymentSuccess={() => router.push("/mybooking")}
@@ -196,19 +200,50 @@ export default function RoomPage() {
               </div>
 
               {selected.length > 0 && (
-                <div
-                  style={{
-                    margin: "20px 0",
-                    padding: "15px",
-                    background: "#f8fafc",
-                    borderRadius: "10px",
-                    display: "flex",
-                    justifyContent: "space-between",
-                  }}
-                >
-                  <strong>Total Price:</strong>
-                  <strong style={{ fontSize: "1.2rem" }}>฿{totalPrice}</strong>
-                </div>
+                <>
+                  <div
+                    style={{
+                      margin: "20px 0",
+                      padding: "15px",
+                      background: "#f8fafc",
+                      borderRadius: "10px",
+                      display: "flex",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <strong>Total Price:</strong>
+                    <strong style={{ fontSize: "1.2rem" }}>฿{totalPrice}</strong>
+                  </div>
+
+                  {/* 🌟 ปุ่มเลือกวิธีชำระเงิน */}
+                  <div style={{ marginBottom: "20px" }}>
+                    <p style={{ marginBottom: "10px", fontWeight: "bold" }}>Select Payment Method</p>
+                    <div style={{ display: "flex", gap: "10px" }}>
+                      <button
+                        onClick={() => setPaymentMethod("qr")}
+                        style={{
+                          flex: 1, padding: "12px", borderRadius: "8px", border: "none", cursor: "pointer",
+                          background: paymentMethod === "qr" ? "#0891b2" : "#e2e8f0",
+                          color: paymentMethod === "qr" ? "white" : "black",
+                          fontWeight: "bold", transition: "0.2s"
+                        }}
+                      >
+                        📱 Scan QR Code
+                      </button>
+                      <button
+                        onClick={() => setPaymentMethod("cash")}
+                        style={{
+                          flex: 1, padding: "12px", borderRadius: "8px", border: "none", cursor: "pointer",
+                          background: paymentMethod === "cash" ? "#0891b2" : "#e2e8f0",
+                          color: paymentMethod === "cash" ? "white" : "black",
+                          fontWeight: "bold", transition: "0.2s"
+                        }}
+                      >
+                        💵 Pay Cash
+                      </button>
+                    </div>
+                  </div>
+                </>
               )}
 
               <button
@@ -216,18 +251,13 @@ export default function RoomPage() {
                 disabled={isSubmitting || selected.length === 0}
                 className={styles.bookBtn}
                 style={{
-                  width: "100%",
-                  padding: "15px",
-                  background: "#0891b2",
-                  color: "white",
-                  border: "none",
-                  borderRadius: "8px",
-                  cursor: "pointer",
+                  width: "100%", padding: "15px", background: "#0891b2", color: "white",
+                  border: "none", borderRadius: "8px", cursor: "pointer", fontSize: "1rem", fontWeight: "bold"
                 }}
               >
                 {isSubmitting
-                  ? "Creating Reservation..."
-                  : `Confirm Reservation (${selected.length} slots)`}
+                  ? "Processing..."
+                  : `Confirm & Pay via ${paymentMethod === 'qr' ? 'QR Code' : 'Cash'}`}
               </button>
             </>
           )}
