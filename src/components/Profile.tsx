@@ -111,6 +111,24 @@ export default function Profile({ session, userData }: ProfileProps) {
         </div>
 
         <Link
+          href="/admin"
+          style={{
+            display: "block",
+            textAlign: "center",
+            padding: "14px",
+            borderRadius: "16px",
+            background: "#f8fafc",
+            color: "#475569",
+            fontWeight: 800,
+            border: "1px solid #e2e8f0",
+            marginBottom: "12px",
+            textDecoration: "none"
+          }}
+        >
+          ⚙️ Admin Dashboard
+        </Link>
+
+        <Link
           href="/payments/history"
           style={{
             display: "block",

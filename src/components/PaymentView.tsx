@@ -23,7 +23,7 @@ export default function PaymentView({
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  
+
   const [paymentId, setPaymentId] = useState<string | null>(null);
   const [qrImage, setQrImage] = useState<string | null>(null);
   const [transactionId, setTransactionId] = useState("");
@@ -32,7 +32,7 @@ export default function PaymentView({
     setIsProcessing(true);
     setError("");
     setSuccess("");
-    
+
     try {
       // 1. สร้าง Payment ผ่าน libs
       const paymentData = await createPayment(reservationId, paymentMethod, token);
@@ -48,7 +48,7 @@ export default function PaymentView({
         setQrImage(qrData.qrImage);
         setSuccess("Please scan the QR Code below to complete your payment. 📱");
       }
-      
+
     } catch (err: any) {
       setError(err.message || "Something went wrong.");
     } finally {
@@ -79,7 +79,7 @@ export default function PaymentView({
       <h2 style={{ fontSize: "1.4rem", fontWeight: "bold", marginBottom: "15px" }}>Checkout</h2>
 
       {error && <div style={{ padding: "12px", background: "#fef2f2", color: "#b91c1c", borderRadius: "8px", marginBottom: "15px", border: "1px solid #fecaca" }}>❌ {error}</div>}
-      
+
       {success && (
         <div style={{ padding: "12px", background: "#f0fdf4", color: "#166534", borderRadius: "8px", marginBottom: "15px", border: "1px solid #bbf7d0" }}>
           <strong>✅ {success}</strong>
@@ -97,16 +97,25 @@ export default function PaymentView({
           <div style={{ marginBottom: "20px" }}>
             <p style={{ fontWeight: "bold", marginBottom: "10px", fontSize: "0.9rem" }}>Payment Method</p>
             <div style={{ display: "flex", gap: "10px" }}>
-              <button onClick={() => setPaymentMethod("qr")} style={{ flex: 1, padding: "12px", borderRadius: "8px", border: paymentMethod === "qr" ? "2px solid #0891b2" : "1px solid #cbd5e1", background: paymentMethod === "qr" ? "#ecfeff" : "white", cursor: "pointer" }}>📱 PromptPay QR</button>
-              <button onClick={() => setPaymentMethod("cash")} style={{ flex: 1, padding: "12px", borderRadius: "8px", border: paymentMethod === "cash" ? "2px solid #0891b2" : "1px solid #cbd5e1", background: paymentMethod === "cash" ? "#ecfeff" : "white", cursor: "pointer" }}>💵 Pay Cash</button>
+              <button onClick={() => setPaymentMethod("qr")} style={{ flex: 1, padding: "12px", borderRadius: "8px", border: paymentMethod === "qr" ? "2px solid #0891b2" : "1px solid #cbd5e1", background: paymentMethod === "qr" ? "#ecfeff" : "white", cursor: "pointer", transition: "all 0.2s" }}>📱 PromptPay QR</button>
+              <button onClick={() => setPaymentMethod("cash")} style={{ flex: 1, padding: "12px", borderRadius: "8px", border: paymentMethod === "cash" ? "2px solid #0891b2" : "1px solid #cbd5e1", background: paymentMethod === "cash" ? "#ecfeff" : "white", cursor: "pointer", transition: "all 0.2s" }}>💵 Pay Cash</button>
             </div>
           </div>
+
+          {paymentMethod === "qr" && (
+            <div style={{ textAlign: "center", padding: "20px", border: "1px dashed #cbd5e1", borderRadius: "10px", marginBottom: "20px", background: "#f8fafc", animation: "fadeIn 0.3s ease-in-out" }}>
+              <p style={{ fontSize: "0.85rem", fontWeight: "bold", color: "#0891b2", marginBottom: "10px", textTransform: "uppercase" }}>Scan to Pay</p>
+              <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=MockPaymentInfo" alt="Active PromptPay QR" style={{ width: "150px", height: "150px", margin: "0 auto", display: "block", borderRadius: "8px", boxShadow: "0 4px 10px rgba(0,0,0,0.05)" }} />
+              <p style={{ fontSize: "0.8rem", color: "#64748b", marginTop: "10px" }}>Scan via your preferred Banking App</p>
+            </div>
+          )}
+
           <button
             onClick={handleConfirmPayment}
             disabled={isProcessing}
-            style={{ width: "100%", padding: "16px", background: "#0891b2", color: "white", border: "none", borderRadius: "10px", fontWeight: "bold", fontSize: "1rem", cursor: "pointer", opacity: isProcessing ? 0.7 : 1 }}
+            style={{ width: "100%", padding: "16px", background: "#0891b2", color: "white", border: "none", borderRadius: "10px", fontWeight: "bold", fontSize: "1rem", cursor: "pointer", opacity: isProcessing ? 0.7 : 1, transition: "background 0.2s" }}
           >
-            {isProcessing ? "Processing..." : `Confirm & Generate ${paymentMethod === 'cash' ? 'Booking' : 'QR'}`}
+            {isProcessing ? "Processing..." : `Confirm Payment`}
           </button>
         </>
       )}
@@ -115,8 +124,8 @@ export default function PaymentView({
         <div style={{ textAlign: "center", padding: "20px", border: "1px dashed #cbd5e1", borderRadius: "10px", marginBottom: "20px" }}>
           <img src={qrImage} alt="PromptPay QR Code" style={{ width: "200px", height: "200px", margin: "0 auto", display: "block" }} />
           <p style={{ fontSize: "0.85rem", color: "#64748b", marginTop: "10px" }}>Scan and pay via your Banking App</p>
-          
-          <button 
+
+          <button
             onClick={handleSimulatePaymentComplete}
             style={{ marginTop: "15px", padding: "8px 16px", background: "#10b981", color: "white", border: "none", borderRadius: "6px", cursor: "pointer", fontSize: "0.85rem" }}
           >
