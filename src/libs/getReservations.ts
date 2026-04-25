@@ -31,7 +31,9 @@ export interface Reservation {
   }[];
 
   status: "pending" | "success" | "cancelled";
-  paymentMethod?: "qr" | "cash" | "not_set";
+  paymentMethod?: "qr" | "cash" | null;
+  paymentStatus?: "pending" | "paid" | "failed" | null;
+  paymentId?: string | null;
 
   createdAt: string;
   updatedAt: string;
@@ -42,6 +44,7 @@ export interface ReservationJson {
   count: number;
   data: Reservation[];
 }
+
 export default async function getReservations(token: string) {
   const response = await fetch(`${BASE}/reservations`, {
     method: "GET",
@@ -51,7 +54,7 @@ export default async function getReservations(token: string) {
     cache: "no-store",
   });
 
-  const text = await response.text(); // 👈 capture raw response
+  const text = await response.text();
 
   if (!response.ok) {
     console.error("❌ API ERROR:", response.status, text);

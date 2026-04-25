@@ -3,7 +3,7 @@
 const BASE_URL =
   process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
 
-// 1. ฟังก์ชันสร้าง Payment (เพิ่มพารามิเตอร์ amount เข้ามา)
+// 1. Create Payment
 export async function createPayment(
   reservationId: string,
   method: string,
@@ -16,20 +16,19 @@ export async function createPayment(
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
     },
-    body: JSON.stringify({ 
-      reservationId, 
-      method, 
-      amount: Number(amount) // บังคับส่งเป็น Number ตรงนี้อีกครั้ง
+    body: JSON.stringify({
+      reservationId,
+      method,
+      amount: Number(amount),
     }),
   });
-  
   const json = await res.json();
   if (!res.ok) throw new Error(json.message || "Payment creation failed");
   return json.data;
 }
 
-// 2. ฟังก์ชันขอรูป QR Code (อัปเดตเป็น GET และใช้ /qr-code)
-export async function generateQrCode(paymentId: string, token: string) {
+// 2. Get QR Code for Payment (returns { imageData, mimeType, ... })
+export async function getQrCodeForPayment(paymentId: string, token: string) {
   const res = await fetch(`${BASE_URL}/payments/${paymentId}/qr-code`, {
     method: "GET",
     headers: {
@@ -37,11 +36,11 @@ export async function generateQrCode(paymentId: string, token: string) {
     },
   });
   const json = await res.json();
-  if (!res.ok) throw new Error(json.message || "Failed to generate QR");
-  return json.data;
+  if (!res.ok) throw new Error(json.message || "Failed to fetch QR Code");
+  return json.data; // { imageData: "base64string", mimeType: "image/png", ... }
 }
 
-// 3. ฟังก์ชันจำลอง/ยืนยันการจ่ายเงินสำเร็จผ่าน QR (อัปเดตเป็น PUT และใช้ /confirm-qr)
+// 3. Confirm QR Payment
 export async function confirmQrPayment(paymentId: string, token: string) {
   const res = await fetch(`${BASE_URL}/payments/${paymentId}/confirm-qr`, {
     method: "PUT",
@@ -55,21 +54,7 @@ export async function confirmQrPayment(paymentId: string, token: string) {
   return json.data;
 }
 
-export async function getQrCodeForPayment(paymentId: string, token: string) {
-  const res = await fetch(`${BASE_URL}/payments/${paymentId}/qr-code`, {
-    method: "GET",
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-  
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.message || "Failed to fetch QR Code for this payment");
-  
-  return json.data; 
-}
-
-// 4. ฟังก์ชันดึงประวัติการจ่ายเงินของผู้ใช้
+// 4. Get Payments by User
 export async function getPaymentsByUser(userId: string, token: string) {
   const res = await fetch(`${BASE_URL}/payments/user/${userId}`, {
     method: "GET",
@@ -83,7 +68,7 @@ export async function getPaymentsByUser(userId: string, token: string) {
   return json.data;
 }
 
-// 5. ฟังก์ชันเปลี่ยนวิธีการจ่ายเงิน (เฉพาะตอน pending)
+// 5. Update Payment Method
 export async function updatePaymentMethod(
   paymentId: string,
   method: string,
@@ -102,7 +87,7 @@ export async function updatePaymentMethod(
   return json.data;
 }
 
-// 6. ฟังก์ชันยกเลิกการจ่ายเงิน (ให้หน้า History ของเพื่อนคุณเอาไปใช้)
+// 6. Cancel Payment
 export async function cancelPayment(paymentId: string, token: string) {
   const res = await fetch(`${BASE_URL}/payments/${paymentId}/cancel`, {
     method: "PUT",
@@ -111,7 +96,6 @@ export async function cancelPayment(paymentId: string, token: string) {
       Authorization: `Bearer ${token}`,
     },
   });
-  
   const json = await res.json();
   if (!res.ok) throw new Error(json.message || "Failed to cancel payment");
   return json.data;

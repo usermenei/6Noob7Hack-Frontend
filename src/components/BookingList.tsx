@@ -10,6 +10,7 @@ import styles from "./BookingList.module.css";
 import ReservationCard from "./ReservationCard";
 import EditModal from "./EditModal";
 import CancelModal from "./CancelModal";
+import PaymentView from "./PaymentView";
 
 export default function BookingList() {
   const { data: session } = useSession();
@@ -24,6 +25,7 @@ export default function BookingList() {
 
   const [editingRes, setEditingRes] = useState<Reservation | null>(null);
   const [cancellingRes, setCancellingRes] = useState<Reservation | null>(null);
+  const [payingRes, setPayingRes] = useState<Reservation | null>(null);
 
   const isAdmin = (session?.user as any)?.role === "admin";
 
@@ -49,21 +51,18 @@ export default function BookingList() {
     fetchReservations();
   }, [session]);
 
-  // ✅ DELETE (permanent)
   const handleDelete = async (id: string) => {
     if (!session?.user?.token) return;
 
     const targetRes = reservations.find((r) => r._id === id);
     if (!targetRes) return;
 
-    // If pending, show detailed cancellation modal
     if (targetRes.status === "pending" && !isAdmin) {
       setCancellingRes(targetRes);
       return;
     }
 
     const isUserClearingHistory = !isAdmin && targetRes?.status === "success";
-
     const confirmMsg = isUserClearingHistory
       ? "Do you want to remove this completed reservation from your history?"
       : "⚠️ Permanently delete this reservation? This cannot be undone.";
@@ -73,9 +72,7 @@ export default function BookingList() {
     try {
       const res = await fetch(`${BASE}/reservations/${id}/permanent`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${session.user.token}`,
-        },
+        headers: { Authorization: `Bearer ${session.user.token}` },
       });
 
       const json = await res.json();
@@ -87,16 +84,14 @@ export default function BookingList() {
     }
   };
 
-  // ✅ APPROVE
   const handleApprove = async (id: string) => {
     if (!session?.user?.token) return;
     if (!confirm("Approve this reservation?")) return;
 
     try {
       await confirmReservation(id, session.user.token as string);
-
       setReservations((prev) =>
-        prev.map((r) => (r._id === id ? { ...r, status: "success" } : r)),
+        prev.map((r) => (r._id === id ? { ...r, status: "success" as const } : r))
       );
     } catch (err: any) {
       alert(err?.message ?? "Failed to approve.");
@@ -108,80 +103,117 @@ export default function BookingList() {
     fetchReservations();
   };
 
-  // ✅ CHANGE PAYMENT METHOD
-  const handlePaymentMethodChange = async (resId: string, method: string) => {
+  const handlePaymentMethodChange = async (paymentId: string, method: string) => {
+  if (!session?.user?.token) return;
+
+  try {
+    const res = await fetch(`${BASE}/payments/${paymentId}/method`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.user.token}`,
+      },
+      body: JSON.stringify({ method }),
+    });
+
+    const text = await res.text();
+    console.log("RAW RESPONSE:", text);
+
+    const json = JSON.parse(text);
+
+    if (!res.ok) throw new Error(json.message);
+
+    setReservations((prev) =>
+      prev.map((r) =>
+        r.paymentId === paymentId
+          ? { ...r, paymentMethod: method as any }
+          : r
+      )
+    );
+
+    alert("✅ Payment method updated!");
+  } catch (err: any) {
+    alert(err?.message ?? "Failed to update payment method.");
+  }
+};
+
+  const handlePaymentSuccess = () => {
+    setPayingRes(null);
+    fetchReservations();
+  };
+
+  const handleAdminConfirmCash = async (paymentId: string) => {
     if (!session?.user?.token) return;
-
     try {
-      // We need the payment record for this reservation
-      // The backend updatePaymentMethod needs the paymentId
-      // I'll update the backend to allow updating by reservationId if easier, 
-      // but for now I'll fetch the payment history or use a specific endpoint
-      
-      const BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
-      const res = await fetch(`${BASE_URL}/payments/reservation/${resId}/method`, {
+      const res = await fetch(`${BASE}/payments/${paymentId}/confirm-cash`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.user.token}`,
-        },
-        body: JSON.stringify({ method }),
+        headers: { Authorization: `Bearer ${session.user.token}` },
       });
-
       const json = await res.json();
       if (!res.ok) throw new Error(json.message);
-
-      // Success! Update local state
-      setReservations((prev) =>
-        prev.map((r) => (r._id === resId ? { ...r, paymentMethod: method as any } : r))
-      );
-      alert("✅ Payment method updated successfully!");
+      alert("✅ Cash payment confirmed!");
+      fetchReservations();
     } catch (err: any) {
-      alert(err?.message ?? "Failed to update payment method.");
+      alert(err?.message ?? "Failed to confirm cash.");
     }
   };
 
-  // ✅ FILTER
+  const handleAdminCancelPayment = async (paymentId: string) => {
+    if (!session?.user?.token) return;
+    try {
+      const res = await fetch(`${BASE}/payments/admin/${paymentId}/cancel`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${session.user.token}` },
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message);
+      alert("✅ Payment cancelled.");
+      fetchReservations();
+    } catch (err: any) {
+      alert(err?.message ?? "Failed to cancel payment.");
+    }
+  };
+
   const filteredReservations = reservations.filter((r) => {
     const userName = r.user?.name?.toLowerCase() || "";
     const spaceName = r.room?.coworkingSpace?.name?.toLowerCase() || "";
 
     const matchUser =
-      !isAdmin ||
-      searchTerm === "" ||
-      userName.includes(searchTerm.toLowerCase());
-
+      !isAdmin || searchTerm === "" || userName.includes(searchTerm.toLowerCase());
     const matchSpace =
-      spaceSearchTerm === "" ||
-      spaceName.includes(spaceSearchTerm.toLowerCase());
-
+      spaceSearchTerm === "" || spaceName.includes(spaceSearchTerm.toLowerCase());
     const matchStatus = statusFilter === "all" || r.status === statusFilter;
 
     return matchUser && matchSpace && matchStatus;
   });
 
-  // ✅ SORT
   const sortedReservations = [...filteredReservations].sort((a, b) => {
     const getStart = (r: Reservation) =>
       r.timeSlots?.length ? new Date(r.timeSlots[0].startTime).getTime() : 0;
 
     if (sortBy === "date-asc") return getStart(a) - getStart(b);
     if (sortBy === "date-desc") return getStart(b) - getStart(a);
-
     if (sortBy === "space-asc") {
-      const nameA = a.room?.coworkingSpace?.name || "";
-      const nameB = b.room?.coworkingSpace?.name || "";
-      return nameA.localeCompare(nameB);
+      return (a.room?.coworkingSpace?.name || "").localeCompare(b.room?.coworkingSpace?.name || "");
     }
-
     if (sortBy === "user-asc") {
-      const userA = a.user?.name || "";
-      const userB = b.user?.name || "";
-      return userA.localeCompare(userB);
+      return (a.user?.name || "").localeCompare(b.user?.name || "");
     }
-
     return 0;
   });
+
+  if (payingRes) {
+    return (
+      <PaymentView
+        reservationId={payingRes._id}
+        paymentMethod={payingRes.paymentMethod as "qr" | "cash"}
+        token={session?.user?.token as string}
+        totalPrice={payingRes.room?.price ?? 0}
+        onPaymentSuccess={handlePaymentSuccess}
+        onBack={() => setPayingRes(null)}
+      />
+    );
+  }
 
   return (
     <div className={styles.container}>
@@ -195,14 +227,7 @@ export default function BookingList() {
       </p>
 
       {reservations.length > 0 && (
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-            marginBottom: "24px",
-          }}
-        >
+        <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
           {isAdmin && (
             <input
               type="text"
@@ -250,9 +275,7 @@ export default function BookingList() {
 
       {!session && (
         <div className={styles.messageCard}>
-          <p className={styles.messageText}>
-            Sign in to view your reservations.
-          </p>
+          <p className={styles.messageText}>Sign in to view your reservations.</p>
           <Link href="/api/auth/signin" className={styles.signInLink}>
             Sign In →
           </Link>
@@ -260,7 +283,6 @@ export default function BookingList() {
       )}
 
       {session && loading && <p className={styles.messageText}>Loading...</p>}
-
       {session && error && <div className={styles.errorCard}>{error}</div>}
 
       {session && !loading && sortedReservations.length === 0 && !error && (
@@ -283,6 +305,11 @@ export default function BookingList() {
           onDelete={handleDelete}
           onEdit={(res) => setEditingRes(res)}
           onPaymentMethodChange={handlePaymentMethodChange}
+          onViewQR={(res) => setPayingRes(res)}
+          onPayNow={(res) => setPayingRes(res)}
+          onEditPayment={(res) => setPayingRes(res)}
+          onAdminConfirmCash={handleAdminConfirmCash}
+          onAdminCancelPayment={handleAdminCancelPayment}
         />
       ))}
 
@@ -295,6 +322,7 @@ export default function BookingList() {
           onSuccess={handleEditSuccess}
         />
       )}
+
       {cancellingRes && (
         <CancelModal
           reservation={cancellingRes}
