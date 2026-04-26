@@ -2,7 +2,7 @@
 
 import { Reservation } from "@/libs/getReservations";
 import Image from "next/image";
-import styles from "./BookingList.module.css";
+import styles from "./ReservationCard.module.css";
 import { useState } from "react";
 
 const formatImageUrl = (url?: string) => {
@@ -41,13 +41,6 @@ const groupContinuousSlots = (
 
 // ── AuditLogTimeline ───────────────────────────────────────────────────────
 
-const ACTION_META: Record<string, { label: string; dot: string; badge: { bg: string; color: string; border: string } }> = {
-  cancel:        { label: "Payment cancelled", dot: "#E24B4A", badge: { bg: "#FCEBEB", color: "#A32D2D", border: "#F09595" } },
-  method_change: { label: "Method changed",    dot: "#378ADD", badge: { bg: "#E6F1FB", color: "#185FA5", border: "#85B7EB" } },
-  confirm:       { label: "Payment confirmed", dot: "#639922", badge: { bg: "#EAF3DE", color: "#3B6D11", border: "#97C459" } },
-  fail:          { label: "Payment failed",    dot: "#EF9F27", badge: { bg: "#FAEEDA", color: "#854F0B", border: "#EF9F27" } },
-};
-
 function relTime(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);
@@ -67,58 +60,71 @@ function formatDateTime(iso: string) {
 
 function AuditLogTimeline({ log }: { log: any[] }) {
   if (!log?.length) {
-    return (
-      <p style={{ fontSize: "12px", color: "#9ca3af", padding: "8px 0", margin: 0 }}>
-        No audit history yet.
-      </p>
-    );
+    return <p className={styles.auditEmpty}>No audit history yet.</p>;
   }
 
+  const getMetaClass = (action: string) => {
+    switch (action) {
+      case "cancel": return styles.auditCancel;
+      case "method_change": return styles.auditMethod;
+      case "confirm": return styles.auditConfirm;
+      case "fail": return styles.auditFail;
+      default: return styles.auditDefault;
+    }
+  };
+
+  const getLabel = (action: string) => {
+    switch (action) {
+      case "cancel": return "Payment cancelled";
+      case "method_change": return "Method changed";
+      case "confirm": return "Payment confirmed";
+      case "fail": return "Payment failed";
+      default: return action;
+    }
+  };
+
   return (
-    <div>
+    <div className={styles.auditContainer}>
       {log.map((entry: any, i: number) => {
-        const meta = ACTION_META[entry.action] ?? {
-          label: entry.action,
-          dot: "#888780",
-          badge: { bg: "#f1f5f9", color: "#64748b", border: "#cbd5e1" },
-        };
+        const metaClass = getMetaClass(entry.action);
+        const label = getLabel(entry.action);
         const isLast = i === log.length - 1;
         const who = entry.changedBy?.name ?? entry.changedBy ?? "System";
 
         let detail = null;
         if (entry.action === "method_change" && entry.oldMethod && entry.newMethod) {
           detail = (
-            <div style={{ display: "flex", gap: "5px", alignItems: "center", marginTop: "3px" }}>
-              <code style={{ fontSize: "10px", background: "#f1f5f9", padding: "1px 5px", borderRadius: "3px", color: "#334155" }}>{entry.oldMethod}</code>
-              <span style={{ color: "#94a3b8", fontSize: "10px" }}>→</span>
-              <code style={{ fontSize: "10px", background: "#f1f5f9", padding: "1px 5px", borderRadius: "3px", color: "#334155" }}>{entry.newMethod}</code>
+            <div className={styles.auditDetailRow}>
+              <code className={styles.auditCode}>{entry.oldMethod}</code>
+              <span className={styles.auditArrow}>→</span>
+              <code className={styles.auditCode}>{entry.newMethod}</code>
             </div>
           );
         } else if (entry.oldStatus && entry.newStatus && entry.oldStatus !== entry.newStatus) {
           detail = (
-            <div style={{ display: "flex", gap: "5px", alignItems: "center", marginTop: "3px" }}>
-              <code style={{ fontSize: "10px", background: "#f1f5f9", padding: "1px 5px", borderRadius: "3px", color: "#334155" }}>{entry.oldStatus}</code>
-              <span style={{ color: "#94a3b8", fontSize: "10px" }}>→</span>
-              <code style={{ fontSize: "10px", background: "#f1f5f9", padding: "1px 5px", borderRadius: "3px", color: "#334155" }}>{entry.newStatus}</code>
+            <div className={styles.auditDetailRow}>
+              <code className={styles.auditCode}>{entry.oldStatus}</code>
+              <span className={styles.auditArrow}>→</span>
+              <code className={styles.auditCode}>{entry.newStatus}</code>
             </div>
           );
         }
 
         return (
-          <div key={entry._id ?? i} style={{ display: "flex", gap: "10px", paddingBottom: "10px" }}>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", paddingTop: "3px" }}>
-              <div style={{ width: "8px", height: "8px", borderRadius: "50%", background: meta.dot, flexShrink: 0 }} />
-              {!isLast && <div style={{ width: "1px", flex: 1, background: "#e5e7eb", marginTop: "3px" }} />}
+          <div key={entry._id ?? i} className={styles.auditItem}>
+            <div className={styles.auditTimelineLine}>
+              <div className={`${styles.auditDot} ${metaClass}`} />
+              {!isLast && <div className={styles.auditLine} />}
             </div>
-            <div style={{ flex: 1 }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
-                <span style={{ fontSize: "12px", fontWeight: 600, color: "#1f2937" }}>{meta.label}</span>
-                <span style={{ fontSize: "10px", padding: "1px 6px", borderRadius: "999px", background: meta.badge.bg, color: meta.badge.color, border: `0.5px solid ${meta.badge.border}` }}>
+            <div className={styles.auditContent}>
+              <div className={styles.auditHeader}>
+                <span className={styles.auditTitle}>{label}</span>
+                <span className={`${styles.auditBadge} ${metaClass}`}>
                   {entry.action.replace("_", " ")}
                 </span>
               </div>
               {detail}
-              <div style={{ marginTop: "3px", fontSize: "10px", color: "#9ca3af" }}>
+              <div className={styles.auditTimestamp}>
                 {who} · <span title={formatDateTime(entry.timestamp)}>{relTime(entry.timestamp)}</span>
               </div>
             </div>
@@ -143,7 +149,6 @@ interface ReservationCardProps {
   onEditPayment?: (res: Reservation) => void;
   onAdminConfirmCash?: (paymentId: string) => void;
   onAdminCancelPayment?: (paymentId: string) => void;
-  // ── new: parent supplies this so the card can lazy-load the audit log ──
   onFetchAuditLog?: (paymentId: string) => Promise<any[]>;
 }
 
@@ -153,10 +158,10 @@ const getPaymentLabel = (method?: string | null) => {
   return "❓ Not Set";
 };
 
-const getPaymentBadgeStyle = (method?: string | null): React.CSSProperties => {
-  if (method === "qr") return { background: "#eff6ff", color: "#1d4ed8", border: "1px solid #bfdbfe" };
-  if (method === "cash") return { background: "#f0fdf4", color: "#15803d", border: "1px solid #bbf7d0" };
-  return { background: "#fafafa", color: "#6b7280", border: "1px solid #e5e7eb" };
+const getPaymentBadgeClass = (method?: string | null) => {
+  if (method === "qr") return styles.badgeQr;
+  if (method === "cash") return styles.badgeCash;
+  return styles.badgeNotSet;
 };
 
 export default function ReservationCard({
@@ -171,31 +176,36 @@ export default function ReservationCard({
   onAdminCancelPayment,
   onFetchAuditLog,
 }: ReservationCardProps) {
-  // ── audit log state ──
   const [auditLog, setAuditLog] = useState<any[]>([]);
   const [showAudit, setShowAudit] = useState(false);
   const [loadingAudit, setLoadingAudit] = useState(false);
+  
+  // ── Custom Confirm Modal State ──
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    onConfirm: () => void;
+  }>({ isOpen: false, title: "", onConfirm: () => {} });
+
+  const closeConfirmModal = () => setConfirmModal({ ...confirmModal, isOpen: false });
 
   const handleToggleAudit = async () => {
-  if (!showAudit && r.paymentId) {
-    setLoadingAudit(true);
-    try {
-      const log = await onFetchAuditLog?.(r.paymentId);
-      console.log("NEW LOG:", log); // 🔥 debug
-      setAuditLog(log ?? []);
-    } finally {
-      setLoadingAudit(false);
+    if (!showAudit && r.paymentId) {
+      setLoadingAudit(true);
+      try {
+        const log = await onFetchAuditLog?.(r.paymentId);
+        setAuditLog(log ?? []);
+      } finally {
+        setLoadingAudit(false);
+      }
     }
-  }
-  setShowAudit((v) => !v);
-};
+    setShowAudit((v) => !v);
+  };
 
   const space = r.room?.coworkingSpace;
-
   const slots = Array.isArray(r.timeSlots)
     ? [...r.timeSlots].sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())
     : [];
-
   const startDateObj = slots.length > 0 ? new Date(slots[0].startTime) : null;
   const isValid = (d: Date | null): d is Date => d !== null && !isNaN(d.getTime());
 
@@ -224,131 +234,138 @@ export default function ReservationCard({
   const isUnpaid = !r.paymentStatus || r.paymentStatus === "pending";
 
   return (
-    <div className={styles.reservationCard}>
-      <div className={styles.cardLeft}>
-        <div className={styles.imageContainer}>
-          {validImageUrl ? (
-            <Image src={validImageUrl} alt={space?.name ?? "Space"} width={120} height={120} className={styles.image} />
-          ) : (
-            <div className={styles.placeholder}>🏢</div>
-          )}
-        </div>
-
-        <div className={styles.infoContainer}>
-          <p className={styles.spaceName}>{space?.name ?? "Unknown Space"}</p>
-          <p className={styles.roomName}>🪑 Room: {r.room?.name ?? "Unknown Room"}</p>
-          {r.paymentId && (
-  <p
-    style={{
-      fontSize: "0.75rem",
-      color: "#64748b",
-      fontFamily: "monospace",
-      marginTop: "4px",
-    }}
-  >
-    💳 Payment ID: {r.paymentId}
-  </p>
-)}
-          {isAdmin && <p className={styles.userName}>👤 {userName}</p>}
-          <p className={styles.location}>{space?.district}, {space?.province}</p>
-
-          <div className={styles.dateTimeContainer}>
-            <div className={styles.dateTime}>
-              <p style={{ fontSize: "0.8rem" }}>📅 {dateStr}</p>
-              {timeRanges.length > 0
-                ? timeRanges.map((range, i) => <p key={i} className={styles.timeSlot}>🕐 {range}</p>)
-                : <p className={styles.timeSlot}>-</p>}
-            </div>
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              <span className={`${styles.statusBadge} ${getStatusClass(r.status)}`}>
-                {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
-              </span>
-              <span style={{ fontSize: "0.75rem", fontWeight: 600, padding: "3px 8px", borderRadius: "999px", ...getPaymentBadgeStyle(r.paymentMethod) }}>
-                {getPaymentLabel(r.paymentMethod)}
-              </span>
-              {r.paymentStatus && (
-                <span style={{ fontSize: "0.7rem", padding: "2px 6px", borderRadius: "999px", background: r.paymentStatus === "paid" ? "#dcfce7" : "#fef9c3", color: r.paymentStatus === "paid" ? "#166534" : "#854d0e", border: `1px solid ${r.paymentStatus === "paid" ? "#86efac" : "#fde68a"}`, fontWeight: 500 }}>
-                  {r.paymentStatus === "paid" ? "✅ Paid" : `⏳ ${r.paymentStatus}`}
-                </span>
-              )}
-            </div>
+    <>
+      <div className={styles.reservationCard}>
+        <div className={styles.cardLeft}>
+          <div className={styles.imageContainer}>
+            {validImageUrl ? (
+              <Image src={validImageUrl} alt={space?.name ?? "Space"} width={120} height={120} className={styles.image} />
+            ) : (
+              <div className={styles.placeholder}>🏢</div>
+            )}
           </div>
 
-          {/* ── Audit log toggle (admin only, only when a paymentId exists) ── */}
-          {isAdmin && r.paymentId && (
-            <div style={{ marginTop: "10px" }}>
-              <button
-                onClick={handleToggleAudit}
-                style={{
-                  fontSize: "11px", padding: "4px 10px",
-                  background: showAudit ? "#f1f5f9" : "transparent",
-                  border: "1px solid #e2e8f0", borderRadius: "6px",
-                  cursor: "pointer", color: "#64748b", fontWeight: 500,
-                }}
-              >
-                {loadingAudit ? "Loading..." : showAudit ? "▲ Hide history" : "▼ View history"}
-              </button>
+          <div className={styles.infoContainer}>
+            <p className={styles.spaceName}>{space?.name ?? "Unknown Space"}</p>
+            <p className={styles.roomName}>🪑 Room: {r.room?.name ?? "Unknown Room"}</p>
+            {r.paymentId && (
+              <p className={styles.paymentIdText}>💳 Payment ID: {r.paymentId}</p>
+            )}
+            {isAdmin && <p className={styles.userName}>👤 {userName}</p>}
+            <p className={styles.location}>{space?.district}, {space?.province}</p>
 
-              {showAudit && (
-                <div style={{ marginTop: "10px", paddingTop: "10px", borderTop: "1px solid #e5e7eb" }}>
-                  <AuditLogTimeline log={auditLog} />
-                </div>
-              )}
+            <div className={styles.dateTimeContainer}>
+              <div className={styles.dateTime}>
+                <p className={styles.dateText}>📅 {dateStr}</p>
+                {timeRanges.length > 0
+                  ? timeRanges.map((range, i) => <p key={i} className={styles.timeSlot}>🕐 {range}</p>)
+                  : <p className={styles.timeSlot}>-</p>}
+              </div>
+
+              <div className={styles.badgesWrapper}>
+                <span className={`${styles.statusBadge} ${getStatusClass(r.status)}`}>
+                  {r.status.charAt(0).toUpperCase() + r.status.slice(1)}
+                </span>
+                <span className={`${styles.paymentMethodBadge} ${getPaymentBadgeClass(r.paymentMethod)}`}>
+                  {getPaymentLabel(r.paymentMethod)}
+                </span>
+                {r.paymentStatus && (
+                  <span className={`${styles.paymentStatusBadge} ${r.paymentStatus === "paid" ? styles.paymentPaid : styles.paymentPending}`}>
+                    {r.paymentStatus === "paid" ? "✅ Paid" : `⏳ ${r.paymentStatus}`}
+                  </span>
+                )}
+              </div>
             </div>
+
+            {isAdmin && r.paymentId && (
+              <div className={styles.auditSection}>
+                <button onClick={handleToggleAudit} className={`${styles.auditToggleBtn} ${showAudit ? styles.auditToggleBtnActive : ""}`}>
+                  {loadingAudit ? "Loading..." : showAudit ? "▲ Hide history" : "▼ View history"}
+                </button>
+
+                {showAudit && (
+                  <div className={styles.auditLogWrapper}>
+                    <AuditLogTimeline log={auditLog} />
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className={styles.actionsContainer}>
+          {isPending && isQrMethod && isUnpaid && (
+            <button onClick={() => onViewQR?.(r)} className={styles.actionBtnViewQR}>
+              {isAdmin ? "📱 View QR" : "📱 View QR / Pay"}
+            </button>
+          )}
+
+          {isAdmin && isPending && isCashMethod && isUnpaid && r.paymentId && (
+            <button onClick={() => setConfirmModal({
+              isOpen: true, title: "Confirm Cash Payment?",
+              onConfirm: () => { onAdminConfirmCash?.(r.paymentId!); closeConfirmModal(); }
+            })} className={styles.actionBtnConfirmCash}>
+              💵 Confirm Cash
+            </button>
+          )}
+
+          {isAdmin && isPending && r.paymentId && isUnpaid && (
+            <button onClick={() => setConfirmModal({
+              isOpen: true, title: "Cancel Payment?",
+              onConfirm: () => { onAdminCancelPayment?.(r.paymentId!); closeConfirmModal(); }
+            })} className={styles.actionBtnCancelPayment}>
+              ❌ Cancel Payment
+            </button>
+          )}
+
+          {isPending && isUnpaid && (
+            <button onClick={() => {
+              const newMethod = isQrMethod ? "cash" : "qr";
+              setConfirmModal({
+                isOpen: true, title: `Switch to ${newMethod === "qr" ? "QR Code" : "Cash"}?`,
+                onConfirm: () => { onPaymentMethodChange?.(r.paymentId!, newMethod); closeConfirmModal(); }
+              });
+            }} className={styles.btnPayment}>
+              💳 {r.paymentMethod ? "Change Method" : "Set Payment Method"}
+            </button>
+          )}
+
+          {(isAdmin || isPending) && (
+            <button onClick={() => onEdit(r)} className={styles.btnEdit}>Edit</button>
+          )}
+
+          {isAdmin && isPending && (
+            <button onClick={() => setConfirmModal({
+              isOpen: true, title: "Approve Reservation?",
+              onConfirm: () => { onApprove(r._id); closeConfirmModal(); }
+            })} className={styles.btnApprove}>
+              ✅ Approve
+            </button>
+          )}
+
+          {(isAdmin || r.status === "cancelled" || r.status === "success") && (
+            <button onClick={() => setConfirmModal({
+              isOpen: true, title: "Delete Reservation?",
+              onConfirm: () => { onDelete(r._id); closeConfirmModal(); }
+            })} className={styles.btnDelete}>
+              🗑️ Delete
+            </button>
           )}
         </div>
       </div>
 
-      <div className={styles.actionsContainer}>
-
-        {/* View QR */}
-        {isPending && isQrMethod && isUnpaid && (
-          <button onClick={() => onViewQR?.(r)} style={{ padding: "8px 12px", background: "#1d4ed8", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "bold", fontSize: "0.85rem" }}>
-            {isAdmin ? "📱 View QR" : "📱 View QR / Pay"}
-          </button>
-        )}
-
-        {/* Admin: Confirm Cash */}
-        {isAdmin && isPending && isCashMethod && isUnpaid && r.paymentId && (
-          <button onClick={() => { if (confirm("Confirm cash received for this reservation?")) onAdminConfirmCash?.(r.paymentId!); }}
-            style={{ padding: "8px 12px", background: "#15803d", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "bold", fontSize: "0.85rem" }}>
-            💵 Confirm Cash
-          </button>
-        )}
-
-        {/* Admin: Cancel Payment */}
-        {isAdmin && isPending && r.paymentId && isUnpaid && (
-          <button onClick={() => { if (confirm("Cancel this payment? Reservation will also be cancelled.")) onAdminCancelPayment?.(r.paymentId!); }}
-            style={{ padding: "8px 12px", background: "#dc2626", color: "white", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "bold", fontSize: "0.85rem" }}>
-            ❌ Cancel Payment
-          </button>
-        )}
-
-        {/* Change payment method */}
-        {isPending && isUnpaid && (
-          <button onClick={() => { const newMethod = isQrMethod ? "cash" : "qr"; if (confirm(`Switch payment method to ${newMethod === "qr" ? "QR Code" : "Cash"}?`)) onPaymentMethodChange?.(r.paymentId!, newMethod); }}
-            className={styles.btnPayment}>
-            💳 {r.paymentMethod ? "Change Method" : "Set Payment Method"}
-          </button>
-        )}
-
-        {/* Edit */}
-        {(isAdmin || isPending) && (
-          <button onClick={() => onEdit(r)} className={styles.btnEdit}>Edit</button>
-        )}
-
-        {/* Approve */}
-        {isAdmin && isPending && (
-          <button onClick={() => onApprove(r._id)} className={styles.btnApprove}>Approve</button>
-        )}
-
-        {/* Delete */}
-        {(isAdmin || r.status === "cancelled" || r.status === "success") && (
-          <button onClick={() => onDelete(r._id)} className={styles.btnDelete}>Delete</button>
-        )}
-
-      </div>
-    </div>
+      {/* ── Custom Confirm Modal ── */}
+      {confirmModal.isOpen && (
+        <div className={styles.modalOverlay} onClick={closeConfirmModal}>
+          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            <h3 className={styles.modalTitle}>{confirmModal.title}</h3>
+            <div className={styles.modalActions}>
+              <button className={styles.modalBtnCancel} onClick={closeConfirmModal}>Cancel</button>
+              <button className={styles.modalBtnConfirm} onClick={confirmModal.onConfirm}>Confirm</button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }

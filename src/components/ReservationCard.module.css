@@ -1,0 +1,308 @@
+/* ── Reservation Card Styles ── */
+.reservationCard {
+  display: flex;
+  flex-direction: column;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+  margin-bottom: 16px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reservationCard:hover {
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 768px) {
+  .reservationCard {
+    flex-direction: row;
+  }
+}
+
+.cardLeft {
+  display: flex;
+  flex: 1;
+  padding: 16px;
+  gap: 16px;
+}
+
+.imageContainer {
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #f3f4f6;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.image {
+  object-fit: cover;
+  width: 100%;
+  height: 100%;
+}
+
+.placeholder {
+  font-size: 3rem;
+}
+
+.infoContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.spaceName {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111827;
+  margin: 0 0 4px 0;
+}
+
+.roomName, .userName, .location, .paymentIdText {
+  margin: 0 0 4px 0;
+  font-size: 0.875rem;
+  color: #4b5563;
+}
+
+.paymentIdText {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-family: monospace;
+  margin-top: 4px;
+}
+
+.dateTimeContainer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 12px;
+  gap: 16px;
+}
+
+.dateTime {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dateText {
+  font-size: 0.8rem;
+  margin: 0;
+  font-weight: 600;
+  color: #374151;
+}
+
+.timeSlot {
+  font-size: 0.8rem;
+  margin: 0;
+  color: #6b7280;
+}
+
+.badgesWrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+.statusBadge, .paymentMethodBadge, .paymentStatusBadge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.statusSuccess { background: #d1fae5; color: #065f46; }
+.statusCancelled { background: #fee2e2; color: #991b1b; }
+.statusPending { background: #fef3c7; color: #92400e; }
+
+.badgeQr { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.badgeCash { background: #f0fdf4; color: #15803d; border: 1px solid #bbf7d0; }
+.badgeNotSet { background: #fafafa; color: #6b7280; border: 1px solid #e5e7eb; }
+
+.paymentPaid { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+.paymentPending { background: #fef9c3; color: #854d0e; border: 1px solid #fde68a; }
+
+/* ── Actions Container ── */
+.actionsContainer {
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  gap: 8px;
+  background: #f8fafc;
+  border-top: 1px solid #e5e7eb;
+}
+
+@media (min-width: 768px) {
+  .actionsContainer {
+    width: 200px;
+    border-top: none;
+    border-left: 1px solid #e5e7eb;
+  }
+}
+
+.actionsContainer button {
+  padding: 8px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.85rem;
+  border: none;
+  transition: opacity 0.2s;
+}
+.actionsContainer button:hover { opacity: 0.85; }
+
+.actionBtnViewQR { background: #1d4ed8; color: white; }
+.actionBtnConfirmCash { background: #15803d; color: white; }
+.actionBtnCancelPayment { background: #dc2626; color: white; }
+.btnPayment { background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1 !important; }
+.btnEdit { background: #f3f4f6; color: #374151; }
+.btnApprove { background: #10b981; color: white; }
+.btnDelete { background: #ef4444; color: white; }
+
+
+/* ── Audit Log Styles ── */
+.auditSection { margin-top: 10px; }
+.auditToggleBtn {
+  font-size: 11px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  cursor: pointer;
+  color: #64748b;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.auditToggleBtnActive { background: #f1f5f9; }
+.auditToggleBtn:hover { background: #e2e8f0; }
+
+.auditLogWrapper {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e5e7eb;
+}
+.auditEmpty { font-size: 12px; color: #9ca3af; padding: 8px 0; margin: 0; }
+.auditContainer { display: flex; flex-direction: column; gap: 10px; }
+.auditItem { display: flex; gap: 10px; padding-bottom: 10px; }
+
+.auditTimelineLine { display: flex; flex-direction: column; align-items: center; padding-top: 3px; }
+.auditDot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.auditLine { width: 1px; flex: 1; background: #e5e7eb; margin-top: 3px; }
+
+.auditContent { flex: 1; }
+.auditHeader { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.auditTitle { font-size: 12px; font-weight: 600; color: #1f2937; }
+.auditBadge { font-size: 10px; padding: 1px 6px; border-radius: 999px; border: 0.5px solid; }
+
+.auditDetailRow { display: flex; gap: 5px; align-items: center; margin-top: 3px; }
+.auditCode { font-size: 10px; background: #f1f5f9; padding: 1px 5px; border-radius: 3px; color: #334155; }
+.auditArrow { color: #94a3b8; font-size: 10px; }
+.auditTimestamp { margin-top: 3px; font-size: 10px; color: #9ca3af; }
+
+/* Audit Colors */
+.auditCancel .auditDot { background: #E24B4A; }
+.auditCancel.auditBadge { background: #FCEBEB; color: #A32D2D; border-color: #F09595; }
+
+.auditMethod .auditDot { background: #378ADD; }
+.auditMethod.auditBadge { background: #E6F1FB; color: #185FA5; border-color: #85B7EB; }
+
+.auditConfirm .auditDot { background: #639922; }
+.auditConfirm.auditBadge { background: #EAF3DE; color: #3B6D11; border-color: #97C459; }
+
+.auditFail .auditDot { background: #EF9F27; }
+.auditFail.auditBadge { background: #FAEEDA; color: #854F0B; border-color: #EF9F27; }
+
+.auditDefault .auditDot { background: #888780; }
+.auditDefault.auditBadge { background: #f1f5f9; color: #64748b; border-color: #cbd5e1; }
+
+
+/* ── Custom Confirm Modal Overlay ── */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  animation: fadeIn 0.2s ease-out forwards;
+}
+
+.modalContent {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  text-align: center;
+  animation: scaleUp 0.2s ease-out forwards;
+}
+
+.modalTitle {
+  margin: 0 0 12px 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.modalMessage {
+  margin: 0 0 24px 0;
+  font-size: 0.95rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+
+.modalBtnCancel, .modalBtnConfirm {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+
+.modalBtnCancel {
+  background: #f1f5f9;
+  color: #475569;
+}
+.modalBtnCancel:hover {
+  background: #e2e8f0;
+}
+
+.modalBtnConfirm {
+  background: #2563eb;
+  color: white;
+  box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+}
+.modalBtnConfirm:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes scaleUp {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}

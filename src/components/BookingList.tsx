@@ -17,6 +17,7 @@ export default function BookingList() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
   const [searchTerm, setSearchTerm] = useState("");
   const [spaceSearchTerm, setSpaceSearchTerm] = useState("");
@@ -31,6 +32,17 @@ export default function BookingList() {
 
   const BASE =
     process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
+
+  // ── Helper functions for messages ──
+  const displayError = (msg: string) => {
+    setError(msg);
+    setTimeout(() => setError(""), 3000);
+  };
+
+  const displaySuccess = (msg: string) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(""), 3000);
+  };
 
   const fetchReservations = async () => {
     if (!session?.user?.token) {
@@ -62,13 +74,6 @@ export default function BookingList() {
       return;
     }
 
-    const isUserClearingHistory = !isAdmin && targetRes?.status === "success";
-    const confirmMsg = isUserClearingHistory
-      ? "Do you want to remove this completed reservation from your history?"
-      : "⚠️ Permanently delete this reservation? This cannot be undone.";
-
-    if (!confirm(confirmMsg)) return;
-
     try {
       const res = await fetch(`${BASE}/reservations/${id}/permanent`, {
         method: "DELETE",
@@ -79,66 +84,69 @@ export default function BookingList() {
       if (!res.ok) throw new Error(json.message);
 
       setReservations((prev) => prev.filter((r) => r._id !== id));
+      displaySuccess("✅ Reservation deleted successfully.");
     } catch (err: any) {
-      alert(err?.message ?? "Failed to delete.");
+      displayError(err?.message ?? "Failed to delete.");
     }
   };
 
   const handleApprove = async (id: string) => {
     if (!session?.user?.token) return;
-    if (!confirm("Approve this reservation?")) return;
-
+    
     try {
       await confirmReservation(id, session.user.token as string);
       setReservations((prev) =>
         prev.map((r) => (r._id === id ? { ...r, status: "success" as const } : r))
       );
+      displaySuccess("✅ Reservation approved.");
     } catch (err: any) {
-      alert(err?.message ?? "Failed to approve.");
+      displayError(err?.message ?? "Failed to approve.");
     }
   };
 
   const handleEditSuccess = () => {
     setEditingRes(null);
+    displaySuccess("✅ Reservation updated.");
     fetchReservations();
   };
 
   const handlePaymentMethodChange = async (paymentId: string, method: string) => {
-  if (!session?.user?.token) return;
+    if (!session?.user?.token) return;
 
-  try {
-    const url = isAdmin
-      ? `${BASE}/payments/admin/${paymentId}/method`
-      : `${BASE}/payments/${paymentId}/method`;
+    try {
+      const url = isAdmin
+        ? `${BASE}/payments/admin/${paymentId}/method`
+        : `${BASE}/payments/${paymentId}/method`;
 
-    const res = await fetch(url, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.user.token}`,
-      },
-      body: JSON.stringify({ method }),
-    });
+      const res = await fetch(url, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.user.token}`,
+        },
+        body: JSON.stringify({ method }),
+      });
 
-    const json = await res.json();
-    if (!res.ok) throw new Error(json.message);
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message);
 
-    setReservations((prev) =>
-      prev.map((r) =>
-        r.paymentId === paymentId
-          ? { ...r, paymentMethod: method as any }
-          : r
-      )
-    );
+      setReservations((prev) =>
+        prev.map((r) =>
+          r.paymentId === paymentId
+            ? { ...r, paymentMethod: method as any }
+            : r
+        )
+      );
 
-    alert("✅ Payment method updated!");
-  } catch (err: any) {
-    alert(err?.message ?? "Failed to update payment method.");
-  }
-};
+      displaySuccess("✅ Payment method updated!");
+    } catch (err: any) {
+      displayError(err?.message ?? "Failed to update payment method.");
+    }
+  };
 
   const handlePaymentSuccess = () => {
     setPayingRes(null);
+    displaySuccess("✅ Payment successful!");
     fetchReservations();
   };
 
@@ -151,15 +159,13 @@ export default function BookingList() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message);
-      alert("✅ Cash payment confirmed!");
+      displaySuccess("✅ Cash payment confirmed!");
       fetchReservations();
     } catch (err: any) {
-      alert(err?.message ?? "Failed to confirm cash.");
+      displayError(err?.message ?? "Failed to confirm cash.");
     }
   };
 
-  // ── Cancel: update state locally so ReservationCard stays mounted
-  //    (avoids resetting the card's auditLog state)
   const handleAdminCancelPayment = async (paymentId: string) => {
     if (!session?.user?.token) return;
     try {
@@ -170,7 +176,6 @@ export default function BookingList() {
       const json = await res.json();
       if (!res.ok) throw new Error(json.message);
 
-      // update reservation status in-place — no full remount
       setReservations((prev) =>
         prev.map((r) =>
           r.paymentId === paymentId
@@ -179,13 +184,12 @@ export default function BookingList() {
         )
       );
 
-      alert("✅ Payment cancelled.");
+      displaySuccess("✅ Payment cancelled.");
     } catch (err: any) {
-      alert(err?.message ?? "Failed to cancel payment.");
+      displayError(err?.message ?? "Failed to cancel payment.");
     }
   };
 
-  // ── Fetch audit log for a payment (passed down to ReservationCard)
   const handleFetchAuditLog = async (paymentId: string): Promise<any[]> => {
     if (!session?.user?.token) return [];
     try {
@@ -251,6 +255,22 @@ export default function BookingList() {
         {sortedReservations.length === 1 ? "reservation" : "reservations"}
       </p>
 
+      {/* ── Notification Areas ── */}
+      {session && error && <div className={styles.errorCard}>{error}</div>}
+      {session && successMsg && (
+        <div style={{
+          padding: "12px 16px",
+          background: "#dcfce3",
+          color: "#166534",
+          borderRadius: "8px",
+          marginBottom: "16px",
+          border: "1px solid #bbf7d0",
+          fontWeight: "500"
+        }}>
+          {successMsg}
+        </div>
+      )}
+
       {reservations.length > 0 && (
         <div style={{ display: "flex", flexDirection: "column", gap: "10px", marginBottom: "24px" }}>
           {isAdmin && (
@@ -308,7 +328,6 @@ export default function BookingList() {
       )}
 
       {session && loading && <p className={styles.messageText}>Loading...</p>}
-      {session && error && <div className={styles.errorCard}>{error}</div>}
 
       {session && !loading && sortedReservations.length === 0 && !error && (
         <div className={styles.messageCard}>
