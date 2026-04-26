@@ -75,8 +75,13 @@ export async function updatePaymentMethod(
   paymentId: string,
   method: string,
   token: string,
+  isAdmin: boolean
 ) {
-  const res = await fetch(`${BASE_URL}/payments/${paymentId}/method`, {
+  const url = isAdmin
+    ? `${BASE_URL}/payments/admin/${paymentId}/method` // ✅ admin route
+    : `${BASE_URL}/payments/${paymentId}/method`;     // ✅ user route
+
+  const res = await fetch(url, {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
@@ -84,8 +89,10 @@ export async function updatePaymentMethod(
     },
     body: JSON.stringify({ method }),
   });
+
   const json = await res.json();
   if (!res.ok) throw new Error(json.message || "Failed to update payment method");
+
   return json.data;
 }
 

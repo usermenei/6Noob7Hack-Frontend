@@ -104,38 +104,38 @@ export default function BookingList() {
   };
 
   const handlePaymentMethodChange = async (paymentId: string, method: string) => {
-    if (!session?.user?.token) return;
+  if (!session?.user?.token) return;
 
-    try {
-      const res = await fetch(`${BASE}/payments/${paymentId}/method`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${session.user.token}`,
-        },
-        body: JSON.stringify({ method }),
-      });
+  try {
+    const url = isAdmin
+      ? `${BASE}/payments/admin/${paymentId}/method`
+      : `${BASE}/payments/${paymentId}/method`;
 
-      const text = await res.text();
-      console.log("RAW RESPONSE:", text);
+    const res = await fetch(url, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${session.user.token}`,
+      },
+      body: JSON.stringify({ method }),
+    });
 
-      const json = JSON.parse(text);
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.message);
 
-      if (!res.ok) throw new Error(json.message);
+    setReservations((prev) =>
+      prev.map((r) =>
+        r.paymentId === paymentId
+          ? { ...r, paymentMethod: method as any }
+          : r
+      )
+    );
 
-      setReservations((prev) =>
-        prev.map((r) =>
-          r.paymentId === paymentId
-            ? { ...r, paymentMethod: method as any }
-            : r
-        )
-      );
-
-      alert("✅ Payment method updated!");
-    } catch (err: any) {
-      alert(err?.message ?? "Failed to update payment method.");
-    }
-  };
+    alert("✅ Payment method updated!");
+  } catch (err: any) {
+    alert(err?.message ?? "Failed to update payment method.");
+  }
+};
 
   const handlePaymentSuccess = () => {
     setPayingRes(null);

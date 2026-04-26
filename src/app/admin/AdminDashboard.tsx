@@ -31,10 +31,12 @@ export default function AdminDashboard() {
   const [searchResult, setSearchResult] = useState<any | null>(null);
   const [searchError, setSearchError] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"qr" | "cash">("qr");
+  
+  // Action states
   const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccessMsg, setSaveSuccessMsg] = useState("");
-  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const [saveSuccessMsg, setSaveSuccessMsg] = useState("");
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
   // All payments audit log
@@ -113,6 +115,7 @@ export default function AdminDashboard() {
     setPreviewImage(null);
     setPreviewFile(null);
     setFileInputKey((k) => k + 1);
+    
     const fetchQr = async () => {
       try {
         const res = await fetch(`${BASE}/payments/admin/qr-code/${selectedSpaceId}`, { headers: { Authorization: `Bearer ${token}` } });
@@ -146,6 +149,7 @@ export default function AdminDashboard() {
       const res = await fetch(`${BASE}/payments/admin/qr-code`, { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "Upload failed");
+      
       setActiveQrImage(previewImage);
       setPreviewImage(null);
       setPreviewFile(null);
@@ -169,6 +173,7 @@ export default function AdminDashboard() {
       const res = await fetch(`${BASE}/payments/${searchQuery.trim()}`, { headers: { Authorization: `Bearer ${token}` } });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "Payment not found");
+      
       setSearchResult(json.data);
       setSelectedPaymentMethod(json.data.method ?? "qr");
       setAuditLogs(json.data.auditLog ?? []);
@@ -181,18 +186,29 @@ export default function AdminDashboard() {
 
   const handleSaveChanges = async () => {
     if (!searchResult) return;
+    if (!window.confirm("Change payment method?")) return;
     setIsSaving(true);
     setSaveSuccessMsg("");
+
     try {
-      const res = await fetch(`${BASE}/payments/${searchResult._id}/method`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ method: selectedPaymentMethod }),
-      });
+      const res = await fetch(
+        `${BASE}/payments/admin/${searchResult._id}/method`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ method: selectedPaymentMethod }),
+        }
+      );
+
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "Failed to update");
+
       setSaveSuccessMsg("Payment method updated successfully! ✅");
       await refreshPayment(searchResult._id);
+
     } catch (err: any) {
       setSaveSuccessMsg("❌ " + (err.message || "Update failed"));
     } finally {
@@ -200,19 +216,55 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleConfirmPayment = async () => {
+    if (!searchResult) return;
+    if (!window.confirm("Are you sure you want to manually confirm this payment? ✅")) return;
+
+    setIsConfirming(true);
+    setSaveSuccessMsg("");
+
+    try {
+      const res = await fetch(`${BASE}/payments/${searchResult._id}/confirm`, { 
+  method: "PUT",
+  headers: { Authorization: `Bearer ${token}` },
+});
+
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.message || "Confirm failed");
+
+      setSaveSuccessMsg("Payment confirmed successfully! ✅");
+      await refreshPayment(searchResult._id);
+    } catch (err: any) {
+      setSaveSuccessMsg("❌ " + (err.message || "Confirm failed"));
+    } finally {
+      setIsConfirming(false);
+    }
+  };
+
   const handleCancelPayment = async () => {
     if (!searchResult) return;
+    if (!window.confirm("Cancel this payment? This cannot be undone. 🚫")) return;
     setIsCancelling(true);
+    setSaveSuccessMsg("");
+
     try {
-      const res = await fetch(`${BASE}/payments/${searchResult._id}/cancel`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      });
+      const res = await fetch(
+        `${BASE}/payments/admin/${searchResult._id}/cancel`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
       const json = await res.json();
       if (!res.ok) throw new Error(json.message || "Cancel failed");
-      setIsCancelModalOpen(false);
+
       setSaveSuccessMsg("Payment cancelled successfully! 🚫");
       await refreshPayment(searchResult._id);
+
     } catch (err: any) {
       setSaveSuccessMsg("❌ " + (err.message || "Cancel failed"));
     } finally {
@@ -238,39 +290,189 @@ export default function AdminDashboard() {
         {/* Header */}
         <div className={styles.pageHeader}>
           <h1>Admin Dashboard</h1>
-          <p>Manage your application settings and payment integrations.</p>
+          <p style={{ color: "#6b7280" }}>Manage your application settings and payment integrations.</p>
         </div>
 
         {/* ── QR Code Management Card ── */}
         <div className={styles.card}>
-            {/* โค้ดเดิมของฝั่ง QR Code... (เพื่อให้โค้ดไม่ยาวเกินไป ผมขอใส่เฉพาะโครงสร้างหลักตามที่คุณให้มา) */}
-            <div className={styles.cardHeader}>
-              <h2><span>📱</span> Payment QR Code</h2>
-              <p style={{ fontSize: "14px", color: "#6b7280", marginTop: "4px" }}>Select a co-working space, then upload its PromptPay QR code.</p>
+          <div className={styles.cardHeader}>
+            <h2><span>📱</span> Payment QR Code</h2>
+            <p style={{ fontSize: "14px", color: "#6b7280", marginTop: "4px" }}>
+              Select a co-working space, then upload its PromptPay QR code.
+            </p>
+          </div>
+          
+          <div style={{ marginTop: "16px", display: "flex", flexDirection: "column", gap: "16px" }}>
+            <select
+              value={selectedSpaceId}
+              onChange={(e) => setSelectedSpaceId(e.target.value)}
+              className={styles.inputField}
+              style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", maxWidth: "400px" }}
+            >
+              {spaces.map((s) => (
+                <option key={s._id} value={s._id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+
+            <div style={{ display: "flex", gap: "24px", flexWrap: "wrap", alignItems: "flex-start", background: "#f8fafc", padding: "16px", borderRadius: "12px", border: "1px solid #e2e8f0" }}>
+              {activeQrImage ? (
+                <div style={{ textAlign: "center", background: "#fff", padding: "12px", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                  <p style={{ fontSize: "12px", fontWeight: 600, color: "#475569", marginBottom: "8px" }}>Current QR Code</p>
+                  <img src={activeQrImage} width={150} alt="Active QR" style={{ borderRadius: "8px" }} />
+                </div>
+              ) : (
+                <div style={{ textAlign: "center", background: "#fff", padding: "12px", borderRadius: "8px", border: "1px dashed #cbd5e1", width: "174px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <p style={{ fontSize: "12px", color: "#94a3b8" }}>No QR Code Set</p>
+                </div>
+              )}
+
+              <div style={{ display: "flex", flexDirection: "column", gap: "12px", flex: 1, minWidth: "250px" }}>
+                <input
+                  key={fileInputKey}
+                  type="file"
+                  onChange={handleFileChange}
+                  style={{ padding: "8px", border: "1px dashed #cbd5e1", borderRadius: "8px", background: "#fff" }}
+                />
+                
+                {previewImage && (
+                  <div style={{ textAlign: "center", background: "#fff", padding: "12px", borderRadius: "8px", border: "2px dashed #3b82f6", width: "fit-content" }}>
+                    <p style={{ fontSize: "12px", fontWeight: 600, color: "#3b82f6", marginBottom: "8px" }}>New Preview</p>
+                    <img src={previewImage} width={100} alt="Preview QR" style={{ borderRadius: "8px" }} />
+                  </div>
+                )}
+
+                <button 
+                  onClick={handleUpload} 
+                  disabled={isUploading || !previewFile}
+                  style={{ 
+                    padding: "10px", 
+                    background: (isUploading || !previewFile) ? "#cbd5e1" : "#3b82f6", 
+                    color: "#fff", 
+                    border: "none", 
+                    borderRadius: "8px", 
+                    cursor: (isUploading || !previewFile) ? "not-allowed" : "pointer", 
+                    fontWeight: 600,
+                    maxWidth: "200px"
+                  }}
+                >
+                  {isUploading ? "Uploading... ⏳" : "Upload QR Code 📤"}
+                </button>
+
+                {qrSuccessMsg && <p style={{ color: "#16a34a", fontSize: "14px", margin: 0, fontWeight: 500 }}>{qrSuccessMsg}</p>}
+                {qrError && <p style={{ color: "#dc2626", fontSize: "14px", margin: 0, fontWeight: 500 }}>❌ {qrError}</p>}
+              </div>
             </div>
-            {/* โค้ดส่วน Select Space & Upload File ที่คุณมีอยู่แล้วทำงานได้ดีครับ วางต่อได้เลย */}
+          </div>
         </div>
 
         {/* ── Find Payment Card ── */}
         <div className={styles.card}>
           <div className={styles.cardHeader}>
             <h2><span>🔍</span> Find Payment</h2>
-            <p style={{ fontSize: "14px", color: "#6b7280", marginTop: "4px" }}>Search by Payment ID to view details and manage payment method or cancel.</p>
+            <p style={{ fontSize: "14px", color: "#6b7280", marginTop: "4px" }}>
+              Search by Payment ID to manage methods, confirm, or cancel transactions.
+            </p>
           </div>
-          <div style={{ display: "flex", gap: "12px" }}>
-            <input type="text" className={styles.inputField} placeholder="Enter Payment ID..." value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSearch()} />
-            <button className={styles.primaryBtn} onClick={handleSearch} disabled={isSearching || !searchQuery.trim()}>
-              {isSearching ? "⏳" : "Search"}
+          <div style={{ display: "flex", gap: "12px", marginTop: "16px" }}>
+            <input 
+              type="text" 
+              className={styles.inputField} 
+              placeholder="Enter Payment ID..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)} 
+              onKeyDown={(e) => e.key === "Enter" && handleSearch()} 
+              style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", flex: 1, maxWidth: "400px" }}
+            />
+            <button 
+              onClick={handleSearch} 
+              disabled={isSearching || !searchQuery.trim()}
+              style={{ padding: "10px 20px", background: "#0f172a", color: "#fff", border: "none", borderRadius: "8px", cursor: (isSearching || !searchQuery.trim()) ? "not-allowed" : "pointer", fontWeight: 600 }}
+            >
+              {isSearching ? "Searching... ⏳" : "Search"}
             </button>
           </div>
           
-          {searchError && <div style={{ padding: "12px", background: "#fef2f2", color: "#b91c1c", borderRadius: "8px", border: "1px solid #fecaca" }}>❌ {searchError}</div>}
+          {searchError && (
+            <div style={{ marginTop: "16px", padding: "12px", background: "#fef2f2", color: "#b91c1c", borderRadius: "8px", border: "1px solid #fecaca" }}>
+              ❌ {searchError}
+            </div>
+          )}
           
           {searchResult && (
-            <div style={{ background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px" }}>
-              {/* รายละเอียดการชำระเงินที่ค้นเจอแบบเดิมของคุณเลยครับ */}
-              <p>Payment Found: <b>{searchResult._id}</b></p>
+            <div style={{ marginTop: "24px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "16px", padding: "24px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: "10px" }}>
+                <p style={{ fontSize: "16px", color: "#0f172a", margin: 0 }}>
+                  Payment ID: <b style={{ fontFamily: "monospace", background: "#e2e8f0", padding: "4px 8px", borderRadius: "4px" }}>{searchResult._id}</b>
+                </p>
+                <span style={{ 
+                  padding: "4px 12px", 
+                  borderRadius: "99px", 
+                  fontSize: "12px", 
+                  fontWeight: 700, 
+                  textTransform: "uppercase",
+                  background: searchResult.status === "success" ? "#dcfce7" : searchResult.status === "cancelled" ? "#fee2e2" : "#f1f5f9",
+                  color: searchResult.status === "success" ? "#166534" : searchResult.status === "cancelled" ? "#991b1b" : "#475569"
+                }}>
+                  {searchResult.status}
+                </span>
+              </div>
+              
+              <div style={{ display: "flex", gap: "12px", alignItems: "flex-end", marginTop: "20px", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 600, color: "#475569" }}>Payment Method</label>
+                  <select
+                    value={selectedPaymentMethod}
+                    onChange={(e) => setSelectedPaymentMethod(e.target.value as any)}
+                    style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", background: "#fff", minWidth: "150px" }}
+                  >
+                    <option value="qr">QR Code</option>
+                    <option value="cash">Cash</option>
+                  </select>
+                </div>
+
+                <button 
+                  onClick={handleSaveChanges} 
+                  disabled={isSaving}
+                  style={{ padding: "10px 16px", background: "#3b82f6", color: "#fff", border: "none", borderRadius: "8px", cursor: isSaving ? "not-allowed" : "pointer", fontWeight: 600, height: "42px" }}
+                >
+                  {isSaving ? "Saving..." : "Update Method 💾"}
+                </button>
+
+                {/* New Confirm Button */}
+                <button 
+                  onClick={handleConfirmPayment} 
+                  disabled={isConfirming || searchResult.status === "success" || searchResult.status === "cancelled"}
+                  style={{ 
+                    padding: "10px 16px", 
+                    background: "#10b981", 
+                    color: "#fff", 
+                    border: "none", 
+                    borderRadius: "8px", 
+                    cursor: (isConfirming || searchResult.status === "success" || searchResult.status === "cancelled") ? "not-allowed" : "pointer", 
+                    fontWeight: 600, 
+                    height: "42px",
+                    opacity: (searchResult.status === "success" || searchResult.status === "cancelled") ? 0.6 : 1
+                  }}
+                >
+                  {isConfirming ? "Confirming..." : "Confirm Payment ✅"}
+                </button>
+
+                <button 
+                  onClick={handleCancelPayment} 
+                  disabled={isCancelling || searchResult.status === "cancelled"}
+                  style={{ padding: "10px 16px", background: "#ef4444", color: "#fff", border: "none", borderRadius: "8px", cursor: (isCancelling || searchResult.status === "cancelled") ? "not-allowed" : "pointer", fontWeight: 600, height: "42px", opacity: searchResult.status === "cancelled" ? 0.6 : 1 }}
+                >
+                  {isCancelling ? "Cancelling..." : "Cancel Payment 🚫"}
+                </button>
+              </div>
+
+              {saveSuccessMsg && (
+                <p style={{ marginTop: "16px", fontSize: "14px", fontWeight: 500, color: saveSuccessMsg.includes("❌") ? "#dc2626" : "#16a34a" }}>
+                  {saveSuccessMsg}
+                </p>
+              )}
               
               <div style={{ borderTop: "1px dashed #cbd5e1", paddingTop: "20px", marginTop: "20px" }}>
                 <p style={{ fontSize: "14px", fontWeight: 700, color: "#334155", marginBottom: "14px" }}>📋 Payment History</p>
@@ -282,62 +484,67 @@ export default function AdminDashboard() {
 
         {/* ── All Payments Audit Log Card ── */}
         <div className={styles.card}>
-          <div className={styles.cardHeader} style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "8px" }}>
+          <div className={styles.cardHeader} style={{ display: "flex", justifyContent: "space-between", flexWrap: "wrap", gap: "8px", alignItems: "center" }}>
             <div>
               <h2><span>📋</span> All Payment Audit Logs</h2>
               <p style={{ fontSize: "14px", color: "#6b7280", marginTop: "4px" }}>Audit history across all payments.</p>
             </div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
               {totalLogEntries > 0 && (
-                <span style={{ fontSize: "12px", background: "#f1f5f9", color: "#475569", padding: "3px 10px", borderRadius: "999px", border: "1px solid #e2e8f0", fontWeight: 600 }}>
+                <span style={{ fontSize: "12px", background: "#f1f5f9", color: "#475569", padding: "4px 12px", borderRadius: "999px", border: "1px solid #e2e8f0", fontWeight: 600 }}>
                   {totalLogEntries} total {totalLogEntries === 1 ? "entry" : "entries"}
                 </span>
               )}
-              <button onClick={fetchAllPayments} disabled={loadingAll}
-                style={{ fontSize: "12px", padding: "5px 12px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", cursor: loadingAll ? "not-allowed" : "pointer", color: "#475569", fontWeight: 600 }}>
-                {loadingAll ? "⏳" : "🔄 Refresh"}
+              <button 
+                onClick={fetchAllPayments} 
+                disabled={loadingAll}
+                style={{ fontSize: "13px", padding: "8px 16px", background: "#f8fafc", border: "1px solid #e2e8f0", borderRadius: "8px", cursor: loadingAll ? "not-allowed" : "pointer", color: "#475569", fontWeight: 600 }}
+              >
+                {loadingAll ? "⏳ Refreshing..." : "🔄 Refresh"}
               </button>
             </div>
           </div>
 
-          {/* Filters (ส่วนที่คุณพิมพ์ค้างไว้) */}
-          <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "12px", flexWrap: "wrap", marginTop: "16px" }}>
             <input
               type="text"
-              placeholder="🔍 Filter by Payment ID or Reservation ID..."
+              placeholder="🔍 Filter by ID..."
               value={auditSearch}
               onChange={(e) => setAuditSearch(e.target.value)}
               className={styles.inputField}
+              style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", flex: 1, minWidth: "250px" }}
             />
-            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}
-              className={styles.inputField} style={{ flex: "0 1 auto", cursor: "pointer", background: "#fff" }}>
+            <select 
+              value={filterStatus} 
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className={styles.inputField} 
+              style={{ padding: "10px", borderRadius: "8px", border: "1px solid #cbd5e1", flex: "0 1 auto", background: "#fff", minWidth: "150px" }}
+            >
               <option value="all">All statuses</option>
               <option value="pending">⏳ Pending</option>
-              <option value="completed">✅ Completed</option>
+              <option value="success">✅ Completed</option>
               <option value="cancelled">🚫 Cancelled</option>
               <option value="failed">❌ Failed</option>
             </select>
           </div>
 
-          {/* ── Render รายการ Audit Log ของทุกคน ── */}
-          <div style={{ marginTop: "16px" }}>
+          <div style={{ marginTop: "24px" }}>
             {loadingAll ? (
-              <p style={{ textAlign: "center", color: "#6b7280", padding: "20px" }}>Loading logs...</p>
+              <p style={{ textAlign: "center", color: "#6b7280", padding: "40px", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>⏳ Loading logs...</p>
             ) : allError ? (
-              <p style={{ textAlign: "center", color: "#ef4444", padding: "20px" }}>{allError}</p>
+              <p style={{ textAlign: "center", color: "#ef4444", padding: "20px", background: "#fef2f2", borderRadius: "12px" }}>{allError}</p>
             ) : paymentsWithLogs.length === 0 ? (
-              <p style={{ textAlign: "center", color: "#6b7280", padding: "20px", background: "#f8fafc", borderRadius: "12px" }}>
+              <p style={{ textAlign: "center", color: "#6b7280", padding: "40px", background: "#f8fafc", borderRadius: "12px", border: "1px dashed #cbd5e1" }}>
                 No audit logs found matching your criteria.
               </p>
             ) : (
-              <div>
+              <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
                 {paymentsWithLogs.map((payment) => (
                   <PaymentRow key={payment._id} payment={payment} />
                 ))}
               </div>
             )}
           </div>
-          
         </div>
       </div>
     </main>

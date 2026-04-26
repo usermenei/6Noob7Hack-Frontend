@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import styles from "./admin.module.css";
 import AuditLogTimeline from "./AuditLogTimeline";
@@ -12,9 +14,18 @@ export default function PaymentRow({ payment }: { payment: any }) {
     failed: { bg: "#fef3c7", color: "#b45309" },
     refund_required: { bg: "#ede9fe", color: "#6d28d9" },
   };
-  
-  const sc = statusColors[payment.status] ?? { bg: "#f1f5f9", color: "#475569" };
+
+  const sc = statusColors[payment.status] ?? {
+    bg: "#f1f5f9",
+    color: "#475569",
+  };
+
   const totalEntries = payment.auditLog?.length ?? 0;
+
+  // ✅ find latest method change
+  const latestMethodChange = [...(payment.auditLog ?? [])]
+    .reverse()
+    .find((log) => log.oldMethod && log.newMethod && log.oldMethod !== log.newMethod);
 
   return (
     <div className={styles.paymentRow}>
@@ -24,7 +35,20 @@ export default function PaymentRow({ payment }: { payment: any }) {
           {open ? "▲" : "▼"}
         </span>
 
-        <code style={{ fontSize: "11px", color: "#334155", background: "#f8fafc", padding: "2px 8px", borderRadius: "6px", border: "1px solid #e2e8f0", flex: "1 1 160px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <code
+          style={{
+            fontSize: "11px",
+            color: "#334155",
+            background: "#f8fafc",
+            padding: "2px 8px",
+            borderRadius: "6px",
+            border: "1px solid #e2e8f0",
+            flex: "1 1 160px",
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+            whiteSpace: "nowrap",
+          }}
+        >
           {payment._id}
         </code>
 
@@ -32,15 +56,69 @@ export default function PaymentRow({ payment }: { payment: any }) {
           ฿{Number(payment.amount).toLocaleString()}
         </span>
 
-        <span style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "999px", background: payment.method === "qr" ? "#eff6ff" : "#f0fdf4", color: payment.method === "qr" ? "#1d4ed8" : "#15803d", border: `1px solid ${payment.method === "qr" ? "#bfdbfe" : "#bbf7d0"}`, fontWeight: 500 }}>
-          {payment.method === "qr" ? "📱 QR" : "💵 Cash"}
-        </span>
+        {/* ✅ METHOD DISPLAY (IMPROVED) */}
+        <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+          {latestMethodChange ? (
+            <>
+              <span
+                style={{
+                  fontSize: "10px",
+                  background: "#f1f5f9",
+                  padding: "2px 6px",
+                  borderRadius: "6px",
+                }}
+              >
+                {latestMethodChange.oldMethod}
+              </span>
+              <span style={{ fontSize: "10px", color: "#94a3b8" }}>→</span>
+              <span
+                style={{
+                  fontSize: "10px",
+                  background: "#dcfce7",
+                  padding: "2px 6px",
+                  borderRadius: "6px",
+                  color: "#166534",
+                  fontWeight: 600,
+                }}
+              >
+                {latestMethodChange.newMethod}
+              </span>
+            </>
+          ) : (
+            <span
+              style={{
+                fontSize: "11px",
+                padding: "2px 8px",
+                borderRadius: "999px",
+                background: payment.method === "qr" ? "#eff6ff" : "#f0fdf4",
+                color: payment.method === "qr" ? "#1d4ed8" : "#15803d",
+                border: `1px solid ${
+                  payment.method === "qr" ? "#bfdbfe" : "#bbf7d0"
+                }`,
+                fontWeight: 500,
+              }}
+            >
+              {payment.method === "qr" ? "📱 QR" : "💵 Cash"}
+            </span>
+          )}
+        </div>
 
         <span className={styles.badge} style={{ background: sc.bg, color: sc.color }}>
           {payment.status}
         </span>
 
-        <span style={{ fontSize: "10px", padding: "2px 7px", borderRadius: "999px", background: totalEntries > 0 ? "#f1f5f9" : "#fafafa", color: totalEntries > 0 ? "#475569" : "#cbd5e1", border: "1px solid #e2e8f0", fontWeight: 600, marginLeft: "auto" }}>
+        <span
+          style={{
+            fontSize: "10px",
+            padding: "2px 7px",
+            borderRadius: "999px",
+            background: totalEntries > 0 ? "#f1f5f9" : "#fafafa",
+            color: totalEntries > 0 ? "#475569" : "#cbd5e1",
+            border: "1px solid #e2e8f0",
+            fontWeight: 600,
+            marginLeft: "auto",
+          }}
+        >
           {totalEntries} {totalEntries === 1 ? "log" : "logs"}
         </span>
       </div>
@@ -48,7 +126,16 @@ export default function PaymentRow({ payment }: { payment: any }) {
       {/* Expanded audit log */}
       {open && (
         <div className={styles.logContainer}>
-          <p style={{ fontSize: "11px", fontWeight: 700, color: "#64748b", textTransform: "uppercase", letterSpacing: "0.5px", marginBottom: "12px" }}>
+          <p
+            style={{
+              fontSize: "11px",
+              fontWeight: 700,
+              color: "#64748b",
+              textTransform: "uppercase",
+              letterSpacing: "0.5px",
+              marginBottom: "12px",
+            }}
+          >
             📋 Audit History
           </p>
           <AuditLogTimeline log={payment.auditLog ?? []} />

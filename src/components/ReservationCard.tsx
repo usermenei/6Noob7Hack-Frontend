@@ -177,17 +177,18 @@ export default function ReservationCard({
   const [loadingAudit, setLoadingAudit] = useState(false);
 
   const handleToggleAudit = async () => {
-    if (!showAudit && auditLog.length === 0 && r.paymentId) {
-      setLoadingAudit(true);
-      try {
-        const log = await onFetchAuditLog?.(r.paymentId);
-        setAuditLog(log ?? []);
-      } finally {
-        setLoadingAudit(false);
-      }
+  if (!showAudit && r.paymentId) {
+    setLoadingAudit(true);
+    try {
+      const log = await onFetchAuditLog?.(r.paymentId);
+      console.log("NEW LOG:", log); // 🔥 debug
+      setAuditLog(log ?? []);
+    } finally {
+      setLoadingAudit(false);
     }
-    setShowAudit((v) => !v);
-  };
+  }
+  setShowAudit((v) => !v);
+};
 
   const space = r.room?.coworkingSpace;
 
