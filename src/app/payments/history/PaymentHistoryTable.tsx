@@ -11,8 +11,11 @@ interface Payment {
   status: string;
   createdAt: string;
   reservation?: {
-    roomSnapshot: {
+    room?: {
       name: string;
+      coworkingSpace?: {
+        name: string;
+      };
     };
     timeSlots?: Array<{
       _id: string;
@@ -60,6 +63,7 @@ export default function PaymentHistoryTable({ payments }: { payments: Payment[] 
             <tr>
               <th>Transaction ID</th>
               <th>Room Name</th>
+              <th>Co-working Space</th>
               <th>Date</th>
               <th>Amount</th>
               <th>Method</th>
@@ -78,22 +82,33 @@ export default function PaymentHistoryTable({ payments }: { payments: Payment[] 
                     {payment.transactionId || "N/A"}
                   </span>
                 </td>
+
+                {/* ✅ FIXED */}
                 <td>
                   <span className={styles.roomName}>
-                    {payment.reservation?.roomSnapshot?.name || "Room Deleted"}
+                    {payment.reservation?.room?.name || "Room Deleted"}
                   </span>
                 </td>
+
+                {/* ✅ NEW: coworking space */}
+                <td>
+                  {payment.reservation?.room?.coworkingSpace?.name || "N/A"}
+                </td>
+
                 <td>{formatDate(payment.createdAt)}</td>
+
                 <td>
                   <span className={styles.amount}>
                     ฿{payment.amount.toLocaleString()}
                   </span>
                 </td>
+
                 <td>
                   <span className={`${styles.methodBadge} ${styles[payment.method]}`}>
                     {payment.method === "qr" ? "QR Code" : "Cash"}
                   </span>
                 </td>
+
                 <td>
                   <span className={`${styles.statusBadge} ${getStatusClass(payment.status)}`}>
                     {payment.status.replace("_", " ")}
@@ -105,10 +120,11 @@ export default function PaymentHistoryTable({ payments }: { payments: Payment[] 
         </table>
       </div>
 
-      {/* Detail Modal */}
+      {/* ================= MODAL ================= */}
       {selectedPayment && (
         <div className={styles.modalOverlay} onClick={() => setSelectedPayment(null)}>
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+            
             <div className={styles.modalHeader}>
               <h2 className={styles.modalTitle}>Payment Detail</h2>
               <button className={styles.closeBtn} onClick={() => setSelectedPayment(null)}>×</button>
@@ -116,29 +132,47 @@ export default function PaymentHistoryTable({ payments }: { payments: Payment[] 
             
             <div className={styles.modalBody}>
               <div className={styles.detailGrid}>
+
                 <div className={styles.detailItem}>
                   <label className={styles.detailLabel}>Room Name</label>
-                  <span className={styles.detailValue}>{selectedPayment.reservation?.roomSnapshot?.name || "N/A"}</span>
+                  <span className={styles.detailValue}>
+                    {selectedPayment.reservation?.room?.name || "N/A"}
+                  </span>
+                </div>
+
+                <div className={styles.detailItem}>
+                  <label className={styles.detailLabel}>Co-working Space</label>
+                  <span className={styles.detailValue}>
+                    {selectedPayment.reservation?.room?.coworkingSpace?.name || "N/A"}
+                  </span>
                 </div>
 
                 <div className={styles.detailItem}>
                   <label className={styles.detailLabel}>Transaction ID</label>
-                  <span className={styles.txnId}>{selectedPayment.transactionId || "N/A"}</span>
+                  <span className={styles.txnId}>
+                    {selectedPayment.transactionId || "N/A"}
+                  </span>
                 </div>
 
                 <div className={styles.detailItem}>
                   <label className={styles.detailLabel}>Date</label>
-                  <span className={styles.detailValue}>{formatDate(selectedPayment.createdAt)}</span>
+                  <span className={styles.detailValue}>
+                    {formatDate(selectedPayment.createdAt)}
+                  </span>
                 </div>
 
                 <div className={styles.detailItem}>
                   <label className={styles.detailLabel}>Time Slots</label>
                   <div className={styles.slotList}>
-                    {selectedPayment.reservation?.timeSlots?.map((slot) => (
-                      <span key={slot._id} className={styles.slotBadge}>
-                        {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
-                      </span>
-                    )) || <span className={styles.detailValue}>N/A</span>}
+                    {selectedPayment.reservation?.timeSlots?.length ? (
+                      selectedPayment.reservation.timeSlots.map((slot) => (
+                        <span key={slot._id} className={styles.slotBadge}>
+                          {formatTime(slot.startTime)} - {formatTime(slot.endTime)}
+                        </span>
+                      ))
+                    ) : (
+                      <span className={styles.detailValue}>N/A</span>
+                    )}
                   </div>
                 </div>
 
@@ -162,12 +196,16 @@ export default function PaymentHistoryTable({ payments }: { payments: Payment[] 
                     ฿{selectedPayment.amount.toLocaleString()}
                   </span>
                 </div>
+
               </div>
             </div>
 
             <div className={styles.modalFooter}>
-              <button className={styles.doneBtn} onClick={() => setSelectedPayment(null)}>Done</button>
+              <button className={styles.doneBtn} onClick={() => setSelectedPayment(null)}>
+                Done
+              </button>
             </div>
+
           </div>
         </div>
       )}

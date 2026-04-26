@@ -104,38 +104,38 @@ export default function BookingList() {
   };
 
   const handlePaymentMethodChange = async (paymentId: string, method: string) => {
-  if (!session?.user?.token) return;
+    if (!session?.user?.token) return;
 
-  try {
-    const res = await fetch(`${BASE}/payments/${paymentId}/method`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${session.user.token}`,
-      },
-      body: JSON.stringify({ method }),
-    });
+    try {
+      const res = await fetch(`${BASE}/payments/${paymentId}/method`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.user.token}`,
+        },
+        body: JSON.stringify({ method }),
+      });
 
-    const text = await res.text();
-    console.log("RAW RESPONSE:", text);
+      const text = await res.text();
+      console.log("RAW RESPONSE:", text);
 
-    const json = JSON.parse(text);
+      const json = JSON.parse(text);
 
-    if (!res.ok) throw new Error(json.message);
+      if (!res.ok) throw new Error(json.message);
 
-    setReservations((prev) =>
-      prev.map((r) =>
-        r.paymentId === paymentId
-          ? { ...r, paymentMethod: method as any }
-          : r
-      )
-    );
+      setReservations((prev) =>
+        prev.map((r) =>
+          r.paymentId === paymentId
+            ? { ...r, paymentMethod: method as any }
+            : r
+        )
+      );
 
-    alert("✅ Payment method updated!");
-  } catch (err: any) {
-    alert(err?.message ?? "Failed to update payment method.");
-  }
-};
+      alert("✅ Payment method updated!");
+    } catch (err: any) {
+      alert(err?.message ?? "Failed to update payment method.");
+    }
+  };
 
   const handlePaymentSuccess = () => {
     setPayingRes(null);
@@ -158,6 +158,8 @@ export default function BookingList() {
     }
   };
 
+  // ── Cancel: update state locally so ReservationCard stays mounted
+  //    (avoids resetting the card's auditLog state)
   const handleAdminCancelPayment = async (paymentId: string) => {
     if (!session?.user?.token) return;
     try {
@@ -167,10 +169,33 @@ export default function BookingList() {
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.message);
+
+      // update reservation status in-place — no full remount
+      setReservations((prev) =>
+        prev.map((r) =>
+          r.paymentId === paymentId
+            ? { ...r, status: "cancelled" as const }
+            : r
+        )
+      );
+
       alert("✅ Payment cancelled.");
-      fetchReservations();
     } catch (err: any) {
       alert(err?.message ?? "Failed to cancel payment.");
+    }
+  };
+
+  // ── Fetch audit log for a payment (passed down to ReservationCard)
+  const handleFetchAuditLog = async (paymentId: string): Promise<any[]> => {
+    if (!session?.user?.token) return [];
+    try {
+      const res = await fetch(`${BASE}/payments/${paymentId}`, {
+        headers: { Authorization: `Bearer ${session.user.token}` },
+      });
+      const json = await res.json();
+      return json.data?.auditLog ?? [];
+    } catch {
+      return [];
     }
   };
 
@@ -310,6 +335,7 @@ export default function BookingList() {
           onEditPayment={(res) => setPayingRes(res)}
           onAdminConfirmCash={handleAdminConfirmCash}
           onAdminCancelPayment={handleAdminCancelPayment}
+          onFetchAuditLog={handleFetchAuditLog}
         />
       ))}
 
