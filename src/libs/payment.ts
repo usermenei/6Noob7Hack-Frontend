@@ -1,7 +1,9 @@
 // libs/payment.ts
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
+  process.env.BACKEND_URL ||
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  "http://localhost:5000/api/v1";
 
 // 1. Create Payment
 export async function createPayment(

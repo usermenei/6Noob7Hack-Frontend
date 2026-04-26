@@ -8,7 +8,9 @@ import {
 import styles from "./RoomsPage.module.css"; // นำเข้า CSS Module
 
 const BASE =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
+  process.env.BACKEND_URL ||
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  "http://localhost:5000/api/v1";
 
 const fixImageUrl = (url: string) => {
   if (!url) return "";

@@ -19,7 +19,9 @@ async function getUserProfile(token: string | undefined | null) {
 
   try {
     const backendUrl =
-      process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000/api/v1";
+      process.env.BACKEND_URL ||           // server-side (Docker)
+      process.env.NEXT_PUBLIC_BACKEND_URL || // fallback
+      "http://localhost:5000/api/v1";
 
     const res = await fetch(`${backendUrl}/auth/me`, {
       method: "GET",
