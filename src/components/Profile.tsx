@@ -1,4 +1,5 @@
 import Link from "next/link";
+import styles from "./profile.module.css"; // ✅ Import CSS Module
 
 interface ProfileProps {
   session: any;
@@ -8,15 +9,15 @@ interface ProfileProps {
 export default function Profile({ session, userData }: ProfileProps) {
   if (!session) {
     return (
-      <main style={{ background: "#f4f5f7", minHeight: "100vh" }}>
-        <div style={{ background: "linear-gradient(135deg, #0c4a6e 0%, #0891b2 100%)", padding: "40px 24px", textAlign: "center", color: "#fff" }}>
-          <h1 style={{ fontSize: "32px", fontWeight: 800 }}>My Profile</h1>
+      <main className={styles.mainContainer}>
+        <div className={styles.heroSimple}>
+          <h1 className={styles.titleSimple}>My Profile</h1>
         </div>
-        <div style={{ padding: "60px 24px", textAlign: "center" }}>
-          <p style={{ color: "#374151", marginBottom: "12px" }}>
+        <div className={styles.unauthContent}>
+          <p className={styles.unauthText}>
             Please sign in to view your profile.
           </p>
-          <Link href="/api/auth/signin" style={{ color: "#0891b2", fontWeight: 700 }}>
+          <Link href="/api/auth/signin" className={styles.signInLink}>
             Sign In
           </Link>
         </div>
@@ -26,17 +27,17 @@ export default function Profile({ session, userData }: ProfileProps) {
 
   if (!userData) {
     return (
-      <main style={{ padding: "40px", textAlign: "center" }}>
-        <p style={{ color: "#111827", fontWeight: 600 }}>
-          Failed to load profile
-        </p>
+      <main className={styles.errorContainer}>
+        <p className={styles.errorText}>Failed to load profile</p>
       </main>
     );
   }
 
   const initials = session.user?.name?.slice(0, 2).toUpperCase() ?? "?";
 
-  // ✅ ใช้ค่าจาก server โดยตรง
+  // ✅ เช็คสิทธิ์ Admin (คุณสามารถปรับเปลี่ยน 'role' ตามโครงสร้าง Data ของคุณได้เลย)
+  const isAdmin = session.user?.role === "admin" || userData?.role === "admin";
+
   const entries = userData.numberOfEntries || 0;
   const rank = userData.rank || 0;
   const title = userData.title || "Newbie";
@@ -45,121 +46,56 @@ export default function Profile({ session, userData }: ProfileProps) {
   const accountDetails = [
     { label: "Name", value: session.user?.name },
     { label: "Email", value: session.user?.email },
-    { label: "Entries", value: entries }, // ✅ เพิ่ม
-    { label: "Rank", value: `${title} (Lv.${rank})` }, // ✅ FIX
-    { label: "Discount", value: `${discount}%` } // ✅ FIX
+    { label: "Entries", value: entries },
+    { label: "Rank", value: `${title} (Lv.${rank})` },
+    { label: "Discount", value: `${discount}%` },
   ];
 
   return (
-    <main style={{ background: "#f4f5f7", minHeight: "100vh" }}>
+    <main className={styles.mainContainer}>
       {/* Hero */}
-      <div style={{ background: "linear-gradient(135deg, #0c4a6e 0%, #0891b2 100%)", padding: "36px 24px", textAlign: "center", color: "#fff" }}>
-        <div style={{ width: "68px", height: "68px", borderRadius: "50%", background: "rgba(255,255,255,0.2)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "22px", fontWeight: 800, margin: "0 auto 12px" }}>
-          {initials}
-        </div>
+      <div className={styles.hero}>
+        <div className={styles.avatar}>{initials}</div>
+        <h1 className={styles.userName}>{session.user?.name}</h1>
+        <p className={styles.userEmail}>{session.user?.email}</p>
 
-        <h1 style={{ fontSize: "20px", fontWeight: 800 }}>
-          {session.user?.name}
-        </h1>
-
-        <p style={{ fontSize: "13px", color: "rgba(255,255,255,0.9)" }}>
-          {session.user?.email}
-        </p>
-
-        <div style={{ display: "flex", justifyContent: "center", gap: "40px", marginTop: "20px" }}>
+        <div className={styles.statsContainer}>
           <div>
-            <p style={{ fontSize: "20px", fontWeight: 800 }}>{entries}</p>
-            <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.8)" }}>
-              Entries
-            </p>
+            <p className={styles.statValue}>{entries}</p>
+            <p className={styles.statLabel}>Entries</p>
           </div>
           <div>
-            <p style={{ fontSize: "20px", fontWeight: 800 }}>{title}</p>
-            <p style={{ fontSize: "12px", color: "rgba(255,255,255,0.8)" }}>
-              Rank
-            </p>
+            <p className={styles.statValue}>{title}</p>
+            <p className={styles.statLabel}>Rank</p>
           </div>
         </div>
       </div>
 
       {/* Details */}
-      <div style={{ maxWidth: "460px", margin: "0 auto", padding: "20px 24px" }}>
-        <div style={{ background: "#fff", borderRadius: "16px", padding: "20px", marginBottom: "14px", border: "1px solid #e5e7eb" }}>
-          <p style={{ fontSize: "14px", fontWeight: 800, color: "#111827", marginBottom: "14px" }}>
-            Account Details
-          </p>
+      <div className={styles.detailsWrapper}>
+        <div className={styles.card}>
+          <p className={styles.cardTitle}>Account Details</p>
 
           {accountDetails.map((row) => (
-            <div
-              key={row.label}
-              style={{
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                padding: "10px 0",
-                borderBottom: "1px solid #f3f4f6"
-              }}
-            >
-              <span style={{ color: "#374151", fontWeight: 500 }}>
-                {row.label}
-              </span>
-              <span style={{ fontWeight: 700, color: "#111827" }}>
-                {row.value}
-              </span>
+            <div key={row.label} className={styles.row}>
+              <span className={styles.rowLabel}>{row.label}</span>
+              <span className={styles.rowValue}>{row.value}</span>
             </div>
           ))}
         </div>
 
-        <Link
-          href="/admin"
-          style={{
-            display: "block",
-            textAlign: "center",
-            padding: "14px",
-            borderRadius: "16px",
-            background: "#f8fafc",
-            color: "#475569",
-            fontWeight: 800,
-            border: "1px solid #e2e8f0",
-            marginBottom: "12px",
-            textDecoration: "none"
-          }}
-        >
-          ⚙️ Admin Dashboard
-        </Link>
+        {/* ✅ แสดงปุ่ม Admin Dashboard เฉพาะตอนที่ isAdmin เป็น true เท่านั้น */}
+        {isAdmin && (
+          <Link href="/admin" className={styles.linkAdmin}>
+            ⚙️ Admin Dashboard
+          </Link>
+        )}
 
-        <Link
-          href="/payments/history"
-          style={{
-            display: "block",
-            textAlign: "center",
-            padding: "14px",
-            borderRadius: "16px",
-            background: "#eff6ff",
-            color: "#2563eb",
-            fontWeight: 700,
-            border: "1px solid #bfdbfe",
-            marginBottom: "12px",
-            textDecoration: "none"
-          }}
-        >
+        <Link href="/payments/history" className={styles.linkHistory}>
           Payment History
         </Link>
 
-        <Link
-          href="/api/auth/signout"
-          style={{
-            display: "block",
-            textAlign: "center",
-            padding: "14px",
-            borderRadius: "16px",
-            background: "#fee2e2",
-            color: "#dc2626",
-            fontWeight: 700,
-            border: "1px solid #fecaca",
-            textDecoration: "none"
-          }}
-        >
+        <Link href="/api/auth/signout" className={styles.linkSignOut}>
           Sign Out
         </Link>
       </div>
