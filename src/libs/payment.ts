@@ -102,3 +102,23 @@ export async function cancelPayment(paymentId: string, token: string) {
   if (!res.ok) throw new Error(json.message || "Failed to cancel payment");
   return json.data;
 }
+
+// 7. Get All Payments (Admin Only)
+export async function getAllPayments(token: string) {
+  // ✅ แก้ URL ให้ถูกต้อง ไม่ให้มี /api/v1 เบิ้ล
+  const response = await fetch(`${BASE_URL}/payments/admin/all`, { 
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+    cache: "no-store", // ✅ เพิ่ม cache: "no-store" เพื่อให้ admin ได้เห็นข้อมูลอัปเดตตลอดเวลาเหมือนของ user
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Failed to fetch all payments");
+  }
+
+  const data = await response.json();
+  return data.data;
+}

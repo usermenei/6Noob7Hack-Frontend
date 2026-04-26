@@ -83,14 +83,12 @@ export default function PaymentHistoryTable({ payments }: { payments: Payment[] 
                   </span>
                 </td>
 
-                {/* ✅ FIXED */}
                 <td>
                   <span className={styles.roomName}>
                     {payment.reservation?.room?.name || "Room Deleted"}
                   </span>
                 </td>
 
-                {/* ✅ NEW: coworking space */}
                 <td>
                   {payment.reservation?.room?.coworkingSpace?.name || "N/A"}
                 </td>
@@ -134,6 +132,13 @@ export default function PaymentHistoryTable({ payments }: { payments: Payment[] 
               <div className={styles.detailGrid}>
 
                 <div className={styles.detailItem}>
+                  <label className={styles.detailLabel}>Transaction ID</label>
+                  <span className={styles.txnId}>
+                    {selectedPayment.transactionId || "N/A"}
+                  </span>
+                </div>
+
+                <div className={styles.detailItem}>
                   <label className={styles.detailLabel}>Room Name</label>
                   <span className={styles.detailValue}>
                     {selectedPayment.reservation?.room?.name || "N/A"}
@@ -144,13 +149,6 @@ export default function PaymentHistoryTable({ payments }: { payments: Payment[] 
                   <label className={styles.detailLabel}>Co-working Space</label>
                   <span className={styles.detailValue}>
                     {selectedPayment.reservation?.room?.coworkingSpace?.name || "N/A"}
-                  </span>
-                </div>
-
-                <div className={styles.detailItem}>
-                  <label className={styles.detailLabel}>Transaction ID</label>
-                  <span className={styles.txnId}>
-                    {selectedPayment.transactionId || "N/A"}
                   </span>
                 </div>
 
