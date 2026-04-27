@@ -24,15 +24,15 @@ export const authOptions: AuthOptions = {
 
           if (!res || !res.token) return null;
 
-          // ✅ ถอดรหัส JWT เพื่อเอา role กับ name ออกมา
+          // ✅ decode JWT
           const decoded: any = jwtDecode(res.token);
 
           return {
             id: decoded.id,
             email: credentials.email,
-            name: decoded.name || "User", 
-            token: res.token, 
-            role: decoded.role || "user", // ดึงจาก token ที่ถอดรหัสแล้ว
+            name: decoded.name || "User",
+            token: res.token,
+            role: decoded.role || "user",
           };
         } catch (err) {
           console.error("Authorize error:", err);
@@ -51,9 +51,9 @@ export const authOptions: AuthOptions = {
       if (user) {
         token.id = user.id;
         token.email = user.email;
-        token.name = (user as any).name;   
-        token.token = (user as any).token; 
-        token.role = (user as any).role;   // ✅ ยัด role ใส่ token
+        token.name = (user as any).name;
+        token.token = (user as any).token;
+        token.role = (user as any).role;
       }
       return token;
     },
@@ -62,11 +62,23 @@ export const authOptions: AuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.email = token.email as string;
-        session.user.name = token.name as string; 
-        (session.user as any).token = token.token; 
-        (session.user as any).role = token.role;   // ✅ ส่ง role ไปให้หน้า BookingList ใช้
+        session.user.name = token.name as string;
+        (session.user as any).token = token.token;
+        (session.user as any).role = token.role;
       }
       return session;
+    },
+
+    // ✅ ADD THIS (fix open redirect / ZAP warning)
+    async redirect({ url, baseUrl }) {
+      // allow same-origin
+      if (url.startsWith(baseUrl)) return url;
+
+      // allow relative paths
+      if (url.startsWith("/")) return baseUrl + url;
+
+      // block external redirects
+      return baseUrl;
     },
   },
 
