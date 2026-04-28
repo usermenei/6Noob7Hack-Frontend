@@ -90,7 +90,6 @@ test.describe('US1-1 (TC1-1..TC1-3): Admin Add Room', () => {
     let dialogFired = false;
     page.once('dialog', async (dialog) => {
       dialogFired = true;
-      console.log('Dialog message:', dialog.message());
       expect(dialog.message()).toContain('Room name already exists');
       await dialog.dismiss();
     });
