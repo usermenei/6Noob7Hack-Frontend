@@ -24,8 +24,8 @@ const nextConfig: NextConfig = {
               "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // Next.js needs these in dev
               "style-src 'self' 'unsafe-inline'",                // Next.js always needs this
               "img-src 'self' data: blob: https://drive.google.com",
-              "font-src 'self' data:",
-              "connect-src 'self' https:",                       // for API calls
+              "font-src 'self' data:",                     
+              "connect-src 'self' https: http://localhost:5000", // for API calls
               "base-uri 'self'",
               "form-action 'self'",
               "frame-ancestors 'none'",
