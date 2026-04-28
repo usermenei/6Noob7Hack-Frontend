@@ -184,7 +184,7 @@ export default function PaymentView({
           textAlign: "center", padding: "40px", color: "#0891b2",
           fontSize: "1rem", fontWeight: "bold"
         }}>
-          ⏳ Generating your QR Code...
+          ⏳ Generating Payment...
         </div>
       )}
 
